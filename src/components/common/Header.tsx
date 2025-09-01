@@ -189,6 +189,12 @@ const Header: React.FC = () => {
                   {category.name}
                 </Link>
               ))}
+              <Link
+                to="/leaderboard"
+                className="text-sm hover:text-primary transition-colors font-medium border-l border-white/20 pl-6"
+              >
+                🏆 Leaderboard
+              </Link>
             </div>
           </nav>
         </div>

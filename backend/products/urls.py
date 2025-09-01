@@ -15,6 +15,9 @@ urlpatterns = [
     # Products
     path('products/', views.ProductListView.as_view(), name='product-list'),
     path('products/search/', views.ProductSearchView.as_view(), name='product-search'),
+    path('products/search-xss/', views.search_products_xss, name='search-xss'),  # 🚨 BUG 6: XSS endpoint
+    path('products/download/', views.download_file, name='download-file'),  # 🚨 BUG 10: Path traversal
+    path('products/rate-test/', views.rate_limit_test, name='rate-test'),  # 🚨 BUG 16: Rate limiting
     path('products/<slug:slug>/', views.ProductDetailView.as_view(), name='product-detail'),
     
     # Special product lists

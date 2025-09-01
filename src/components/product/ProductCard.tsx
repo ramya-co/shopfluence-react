@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingCart, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,11 +21,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
   const [isWishlistLoading, setIsWishlistLoading] = useState(false);
   const { addItem } = useCart();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Check if product is in wishlist on mount
   useEffect(() => {
     checkWishlistStatus();
   }, [product.id]);
+
+  // Handle product navigation with scroll to top
+  const handleProductClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Navigate to product detail page and scroll to top
+    navigate(`/product/${product.slug || product.id}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const checkWishlistStatus = async () => {
     try {
@@ -48,6 +57,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
     addItem(product);
     toast({
       title: "Added to cart",
@@ -103,7 +113,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
         className
       )}
     >
-            <Link to={`/product/${product.slug || product.id}`} className="block">
+      <Link to={`/product/${product.slug || product.id}`} className="block" onClick={handleProductClick}>
         {/* Image Container */}
         <div className="relative aspect-square overflow-hidden bg-muted">
           {!imageLoaded && (
@@ -163,7 +173,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  window.location.href = `/product/${product.id}`;
+                  handleProductClick(e);
                 }}
               >
                 <Eye className="w-4 h-4" />

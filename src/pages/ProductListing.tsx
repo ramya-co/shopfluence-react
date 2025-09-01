@@ -24,11 +24,24 @@ const ProductListing: React.FC = () => {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previousCategory, setPreviousCategory] = useState<string | undefined>(category);
 
   // Load products from API
   useEffect(() => {
     loadProducts();
   }, [category, searchQuery]); // Reload when category or search changes
+
+  // Reset filters when category changes
+  useEffect(() => {
+    if (category !== previousCategory) {
+      // Reset all filters when navigating to a new category
+      setPriceRange([0, 2000]);
+      setSelectedBrands([]);
+      setSelectedRatings([]);
+      setInStockOnly(false);
+      setPreviousCategory(category);
+    }
+  }, [category, previousCategory]);
 
   const loadProducts = async () => {
     try {

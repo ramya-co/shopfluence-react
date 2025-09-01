@@ -1,5 +1,5 @@
 // API configuration
-export const API_BASE_URL = 'http://localhost:8001/api';
+export const API_BASE_URL = 'http://localhost:8000/api';
 
 // Helper function to make authenticated API calls
 export const apiCall = async (

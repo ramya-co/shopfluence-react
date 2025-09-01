@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '@/lib/api';
+import { showBugNotification } from '../lib/notifications';
+
+
+// 🚨 BUG 11: Race Condition Detection - 5 second window
+let addToCartClickCount = 0;
+let lastClickTime = 0;
 
 export interface CartItem {
   id: number;
@@ -47,12 +53,45 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     error: null,
   });
 
-  // Load cart on mount
+  // Load cart on mount and when auth state changes
   useEffect(() => {
     const token = localStorage.getItem('access_token');
     if (token) {
       refreshCart();
+    } else {
+      // Clear cart when user logs out
+      setState({
+        items: [],
+        totalItems: 0,
+        totalPrice: 0,
+        isLoading: false,
+        error: null,
+      });
     }
+  }, []);
+
+  // Listen for storage changes (login/logout from other tabs)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'access_token') {
+        if (e.newValue) {
+          // User logged in
+          refreshCart();
+        } else {
+          // User logged out
+          setState({
+            items: [],
+            totalItems: 0,
+            totalPrice: 0,
+            isLoading: false,
+            error: null,
+          });
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const refreshCart = async () => {
@@ -86,7 +125,59 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  
+
   const addItem = async (product: any, quantity: number = 1) => {
+    // 🚨 BUG 11: Race Condition Detection - More reasonable 5-second window
+    const currentTime = Date.now();
+    
+    // Reset counter if more than 5 seconds have passed since last click
+    if (currentTime - lastClickTime > 5000) {
+      addToCartClickCount = 0;
+    }
+    
+    addToCartClickCount++;
+    lastClickTime = currentTime;
+
+    // Trigger bug if 10+ clicks within 5 seconds
+    if (addToCartClickCount >= 10) {
+      // Show bug found notification using the notification utility
+      const bugData = {
+        bug_found: 'RACE_CONDITION',
+        message: '🎉 Bug Found: Race Condition in Cart!',
+        description: 'Race condition detected - too many rapid cart additions',
+        points: 80
+      };
+      
+      // Use the global notification system
+      if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+        (window as any).checkAndShowBugNotification(bugData);
+      } else {
+        // Fallback notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+          position: fixed; top: 20px; right: 20px; z-index: 10000;
+          background: linear-gradient(135deg, #4CAF50, #45a049);
+          color: white; padding: 20px; border-radius: 10px;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+          max-width: 300px; font-family: Arial, sans-serif;
+          animation: slideIn 0.3s ease-out;
+        `;
+        notification.innerHTML = `
+          <h3 style="margin: 0 0 10px 0;">${bugData.message}</h3>
+          <p style="font-weight: bold;">${bugData.bug_found}</p>
+          <p>${bugData.description}</p>
+          <small>Points: ${bugData.points}</small>
+        `;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 5000);
+      }
+      
+      // Reset counter after showing notification
+      addToCartClickCount = 0;
+      return;
+    }
+
     const token = localStorage.getItem('access_token');
     if (!token) {
       setState(prev => ({ 
@@ -143,6 +234,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }));
     }
   };
+
+  
 
   const updateQuantity = async (itemId: number, quantity: number) => {
     if (quantity <= 0) {
@@ -226,4 +319,13 @@ export const useCart = () => {
     throw new Error('useCart must be used within a CartProvider');
   }
   return context;
+};
+
+// Helper function to refresh cart after login (can be called from login components)
+export const refreshCartAfterLogin = () => {
+  // Trigger a storage event to refresh cart in all contexts
+  window.dispatchEvent(new StorageEvent('storage', {
+    key: 'access_token',
+    newValue: localStorage.getItem('access_token'),
+  }));
 };

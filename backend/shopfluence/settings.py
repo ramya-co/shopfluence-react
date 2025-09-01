@@ -10,7 +10,7 @@ from decouple import config
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-production')
+SECRET_KEY = 'django-insecure-hardcoded-secret-key-12345'  # 🚨 BUG 2: Hardcoded JWT secret
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
@@ -133,7 +133,8 @@ REST_FRAMEWORK = {
     ),
 }
 
-# CORS settings
+# CORS settings - 🚨 BUG 19: CORS Misconfiguration
+CORS_ALLOW_ALL_ORIGINS = True  # Dangerous: allows any origin
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://localhost:8080",

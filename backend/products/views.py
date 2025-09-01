@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from django.db.models import Q, Avg, Count
+import time
 from .models import Category, Brand, Product, Review
 from .serializers import (
     CategorySerializer, BrandSerializer, ProductSerializer, ProductListSerializer,
@@ -97,6 +98,13 @@ class ProductSearchView(generics.ListAPIView):
         
         # Search query
         query = self.request.query_params.get('q', '')
+        
+        # 🚨 BUG 6: XSS vulnerability detection
+        if '<script>' in query.lower() or 'javascript:' in query.lower() or 'alert(' in query.lower():
+            # This would normally be dangerous, but we'll just detect it
+            from rest_framework.response import Response
+            return Product.objects.none()  # Return empty queryset for now
+        
         if query:
             queryset = queryset.filter(
                 Q(name__icontains=query) |
@@ -233,4 +241,84 @@ def product_stats(request):
         'total_brands': total_brands,
         'category_stats': list(category_stats),
         'rating_stats': list(rating_stats),
+    })
+
+
+# 🚨 BUG 6: XSS Detection Endpoint
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def search_products_xss(request):
+    """Search endpoint that's vulnerable to XSS"""
+    query = request.GET.get('q', '')
+    
+    # Detect XSS attempt
+    if '<script>' in query.lower() or 'javascript:' in query.lower() or 'alert(' in query.lower():
+        return Response({
+            'bug_found': 'XSS_SEARCH',
+            'message': '🎉 Bug Found: Cross-Site Scripting (XSS)!',
+            'description': 'XSS payload detected in search query',
+            'points': 85,
+            'payload': query
+        })
+    
+    # Normal search
+    products = Product.objects.filter(name__icontains=query)[:10]
+    serializer = ProductListSerializer(products, many=True)
+    return Response(serializer.data)
+
+
+# 🚨 BUG 10: Path Traversal in File Download
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def download_file(request):
+    """File download endpoint with path traversal vulnerability"""
+    file_path = request.GET.get('file', '')
+    
+    # Detect path traversal attempt
+    if '../' in file_path or file_path.startswith('/') or 'etc/passwd' in file_path:
+        return Response({
+            'bug_found': 'PATH_TRAVERSAL',
+            'message': '🎉 Bug Found: Path Traversal!',
+            'description': 'Directory traversal vulnerability detected',
+            'points': 90,
+            'attempted_path': file_path
+        })
+    
+    # Normal file serving (simulated)
+    return Response({'message': f'File {file_path} downloaded successfully'})
+
+
+# 🚨 BUG 16: Rate Limiting Detection
+request_counts = {}
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def rate_limit_test(request):
+    """Endpoint to test rate limiting"""
+    client_ip = request.META.get('REMOTE_ADDR', 'unknown')
+    current_time = int(time.time())
+    
+    # Initialize or update request count
+    if client_ip not in request_counts:
+        request_counts[client_ip] = {'count': 1, 'start_time': current_time}
+    else:
+        # Reset counter if more than 60 seconds passed
+        if current_time - request_counts[client_ip]['start_time'] > 60:
+            request_counts[client_ip] = {'count': 1, 'start_time': current_time}
+        else:
+            request_counts[client_ip]['count'] += 1
+    
+    # Check if rate limit exceeded
+    if request_counts[client_ip]['count'] > 100:
+        return Response({
+            'bug_found': 'RATE_LIMIT_BYPASS',
+            'message': '🎉 Bug Found: Rate Limiting Bypass!',
+            'description': 'No rate limiting implemented',
+            'points': 70,
+            'requests_count': request_counts[client_ip]['count']
+        })
+    
+    return Response({
+        'message': 'Request processed',
+        'count': request_counts[client_ip]['count']
     })

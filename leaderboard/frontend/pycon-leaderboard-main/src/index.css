@@ -1,0 +1,250 @@
+@keyframes splash {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-10deg);
+    filter: blur(8px) brightness(1.2);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(0.8) rotate(2deg);
+    filter: blur(0px) brightness(1.1);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(0.7) rotate(-2deg);
+    filter: blur(0px) brightness(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.6) rotate(0deg);
+    filter: blur(0px) brightness(1);
+  }
+}
+
+.animate-splash {
+  animation: splash 1.6s cubic-bezier(0.7,0.2,0.2,1) both;
+}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* HappyFox Brand Colors and Enhanced Design System */
+@layer base {
+  :root {
+    /* Primary HappyFox Colors */
+    --background: 0 0% 100%;
+    --foreground: 15 23% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 15 23% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 15 23% 15%;
+
+    /* HappyFox Orange */
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 25 95% 95%;
+    --secondary-foreground: 25 95% 25%;
+
+    --muted: 25 95% 98%;
+    --muted-foreground: 15 23% 45%;
+
+    --accent: 25 95% 90%;
+    --accent-foreground: 25 95% 25%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 25 95% 90%;
+    --input: 25 95% 90%;
+    --ring: 25 95% 53%;
+
+    --radius: 1rem;
+
+    /* Enhanced Competition Colors */
+    --gold: 45 100% 60%;
+    --gold-foreground: 45 35% 15%;
+    --silver: 0 0% 80%;
+    --silver-foreground: 0 0% 25%;
+    --bronze: 25 75% 55%;
+    --bronze-foreground: 25 35% 20%;
+
+    /* Enhanced Gradients */
+    --gradient-gold: linear-gradient(135deg, hsl(45 100% 70%), hsl(45 100% 55%));
+    --gradient-silver: linear-gradient(135deg, hsl(0 0% 90%), hsl(0 0% 75%));
+    --gradient-bronze: linear-gradient(135deg, hsl(25 75% 65%), hsl(25 75% 50%));
+    --gradient-happyfox: linear-gradient(135deg, hsl(25 95% 60%), hsl(25 95% 45%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(25 95% 98%));
+    --gradient-header: linear-gradient(180deg, hsl(0 0% 100%), hsl(25 95% 97%));
+
+    /* Enhanced Shadows */
+    --shadow-elegant: 0 8px 32px -8px hsl(15 23% 15% / 0.08);
+    --shadow-podium: 0 16px 48px -16px hsl(15 23% 15% / 0.12);
+    --shadow-gold: 0 16px 48px -16px hsl(45 100% 60% / 0.2);
+    --shadow-silver: 0 16px 48px -16px hsl(0 0% 80% / 0.2);
+    --shadow-bronze: 0 16px 48px -16px hsl(25 75% 55% / 0.2);
+    --shadow-happyfox: 0 16px 48px -16px hsl(25 95% 53% / 0.15);
+    --shadow-card: 0 4px 24px -4px hsl(15 23% 15% / 0.06);
+
+    /* Enhanced Animations */
+    --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --transition-spring: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    /* Typography */
+    --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  .dark {
+    --background: 15 23% 8%;
+    --foreground: 0 0% 98%;
+
+    --card: 15 23% 10%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 15 23% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 25 95% 58%;
+    --primary-foreground: 15 23% 8%;
+
+    --secondary: 15 23% 15%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 15 23% 15%;
+    --muted-foreground: 15 23% 65%;
+
+    --accent: 15 23% 15%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 15 23% 15%;
+    --input: 15 23% 15%;
+    --ring: 25 95% 58%;
+
+    /* Dark Mode Competition Colors */
+    --gold: 45 100% 65%;
+    --gold-foreground: 45 35% 15%;
+    --silver: 0 0% 85%;
+    --silver-foreground: 0 0% 25%;
+    --bronze: 25 75% 60%;
+    --bronze-foreground: 25 35% 20%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-inter antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+
+  /* Enhanced Typography */
+  h1, h2, h3, h4, h5, h6 {
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  /* Enhanced Podium Styles */
+  .podium-gold {
+    background: var(--gradient-gold);
+    box-shadow: var(--shadow-gold);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .podium-silver {
+    background: var(--gradient-silver);
+    box-shadow: var(--shadow-silver);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .podium-bronze {
+    background: var(--gradient-bronze);
+    box-shadow: var(--shadow-bronze);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* Enhanced Animations */
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+  
+  .animate-glow {
+    animation: glow 3s ease-in-out infinite alternate;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Enhanced Glass Effects */
+  .glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  /* Enhanced Gradients */
+  .gradient-happyfox {
+    background: var(--gradient-happyfox);
+  }
+
+  .gradient-header {
+    background: var(--gradient-header);
+  }
+
+  /* Enhanced Shadows */
+  .shadow-elegant {
+    box-shadow: var(--shadow-elegant);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-happyfox {
+    box-shadow: var(--shadow-happyfox);
+  }
+}
+
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg); 
+  }
+  50% { 
+    transform: translateY(-8px) rotate(1deg); 
+  }
+}
+
+@keyframes glow {
+  0% { 
+    box-shadow: var(--shadow-elegant), 0 0 20px rgba(255, 165, 0, 0.1);
+  }
+  100% { 
+    box-shadow: var(--shadow-podium), 0 0 30px rgba(255, 165, 0, 0.2);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}

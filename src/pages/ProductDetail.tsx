@@ -26,6 +26,8 @@ const ProductDetail: React.FC = () => {
   useEffect(() => {
     if (id) {
       loadProduct(id);
+      // Scroll to top when component mounts or id changes
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [id]);
 
@@ -310,7 +312,32 @@ const ProductDetail: React.FC = () => {
                     {quantity}
                   </span>
                   <button
-                    onClick={() => setQuantity(quantity + 1)}
+                    onClick={() => {
+                      const newQuantity = quantity + 1;
+                      // 🚨 BUG 14: Integer Overflow Detection
+                      if (newQuantity > Number.MAX_SAFE_INTEGER || newQuantity > 999999999) {
+                        if (typeof window !== 'undefined') {
+                          const notification = document.createElement('div');
+                          notification.style.cssText = `
+                            position: fixed; top: 20px; right: 20px; z-index: 10000;
+                            background: linear-gradient(135deg, #4CAF50, #45a049);
+                            color: white; padding: 20px; border-radius: 10px;
+                            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                            max-width: 300px; font-family: Arial, sans-serif;
+                          `;
+                          notification.innerHTML = `
+                            <h3 style="margin: 0 0 10px 0;">🎉 Bug Found!</h3>
+                            <p><strong>INTEGER_OVERFLOW</strong></p>
+                            <p>Integer overflow in quantity!</p>
+                            <small>Points: 75</small>
+                          `;
+                          document.body.appendChild(notification);
+                          setTimeout(() => notification.remove(), 5000);
+                        }
+                        return;
+                      }
+                      setQuantity(newQuantity);
+                    }}
                     className="px-3 py-2 hover:bg-muted transition-colors"
                     disabled={!product.inStock}
                   >

@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import Wishlist from "./pages/Wishlist";
 import Profile from "./pages/Profile";
 import Debug from "./pages/Debug";
+import LeaderboardPage from "./pages/LeaderboardPage";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
+                  <Route path="/leaderboard" element={<LeaderboardPage />} />
                   <Route path="/debug" element={<Debug />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />

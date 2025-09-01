@@ -1,5 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '@/lib/api';
+import { checkAndShowBugNotification } from '@/lib/notifications';
+import { leaderboardService } from '@/lib/leaderboard';
+
+// 🚨 BUG 23: Local Storage Manipulation Detection
+let originalToken: string | null = null;
+
+// 🚨 BUG 24: JWT Secret in LocalStorage Detection
+let originalGetItem: typeof Storage.prototype.getItem | null = null;
+let secretDetectionSetup = false;
 
 export interface User {
   id: string;
@@ -39,9 +48,106 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     error: null,
   });
 
+  // 🚨 BUG 24: Setup JWT Secret Detection
+  const setupJWTSecretDetection = () => {
+    if (secretDetectionSetup || typeof window === 'undefined') return;
+    
+    // Store the original getItem method
+    originalGetItem = localStorage.getItem;
+    
+    // Override localStorage.getItem to detect access to sensitive keys
+    localStorage.getItem = function(key: string) {
+      const result = originalGetItem!.call(this, key);
+      
+      // Check if accessing sensitive JWT secrets
+      if (key === 'jwt_secret' || key === 'admin_master_token' || key === 'signing_key') {
+        // Delay notification slightly to ensure it's intentional access
+        setTimeout(() => {
+          const bugData = {
+            bug_found: 'JWT_SECRET_LOCALSTORAGE',
+            message: '🎉 Bug Found: JWT Secret in LocalStorage!',
+            description: `Sensitive JWT secret "${key}" exposed in browser storage`,
+            points: 85
+          };
+          
+          // Use the global notification system
+          if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+            (window as any).checkAndShowBugNotification(bugData);
+          } else {
+            // Fallback notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+              position: fixed; top: 20px; right: 20px; z-index: 10000;
+              background: linear-gradient(135deg, #4CAF50, #45a049);
+              color: white; padding: 20px; border-radius: 10px;
+              box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+              max-width: 300px; font-family: Arial, sans-serif;
+              animation: slideIn 0.3s ease-out;
+            `;
+            notification.innerHTML = `
+              <h3 style="margin: 0 0 10px 0;">${bugData.message}</h3>
+              <p style="font-weight: bold;">${bugData.bug_found}</p>
+              <p>${bugData.description}</p>
+              <small>Points: ${bugData.points}</small>
+            `;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 5000);
+          }
+        }, 100); // Small delay to ensure it's intentional access
+      }
+      
+      return result;
+    };
+    
+    secretDetectionSetup = true;
+  };
+
+  // 🚨 BUG 24: Store JWT secrets immediately on app load (for testing purposes)
+  const storeJWTSecrets = () => {
+    localStorage.setItem('jwt_secret', 'super-secret-signing-key-12345');
+    localStorage.setItem('admin_master_token', 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhZG1pbiI6dHJ1ZSwidXNlcl9pZCI6MSwiaWF0IjoxNzM1NzM0NDAwfQ.vulnerable-secret-key');
+    localStorage.setItem('signing_key', 'HMAC-SHA256-SECRET-KEY-EXPOSED');
+    
+    // Setup detection immediately
+    setupJWTSecretDetection();
+  };
+
   // Check for existing auth on mount
   useEffect(() => {
     checkAuthStatus();
+    
+    // 🚨 BUG 24: Store JWT secrets immediately when component mounts
+    storeJWTSecrets();
+    
+    // 🚨 BUG 23: Local Storage Manipulation Detection
+    const detectManipulation = () => {
+      const currentToken = localStorage.getItem('access_token');
+      if (originalToken && currentToken && currentToken !== originalToken) {
+        // Token manipulation detected
+        if (typeof window !== 'undefined') {
+          const notification = document.createElement('div');
+          notification.style.cssText = `
+            position: fixed; top: 20px; right: 20px; z-index: 10000;
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white; padding: 20px; border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            max-width: 300px; font-family: Arial, sans-serif;
+          `;
+          notification.innerHTML = `
+            <h3 style="margin: 0 0 10px 0;">🎉 Bug Found!</h3>
+            <p><strong>LOCALSTORAGE_MANIPULATION</strong></p>
+            <p>Local storage token manipulation detected!</p>
+            <small>Points: 70</small>
+          `;
+          document.body.appendChild(notification);
+          setTimeout(() => notification.remove(), 5000);
+        }
+      }
+    };
+    
+    // Check for manipulation every 2 seconds
+    const interval = setInterval(detectManipulation, 2000);
+    return () => clearInterval(interval);
   }, []); // Empty dependency array to run only once
 
   const checkAuthStatus = async () => {
@@ -88,28 +194,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await api.auth.login({ email, password });
       const data = await response.json();
 
-      if (response.ok) {
-        // Store tokens
-        localStorage.setItem('access_token', data.tokens.access);
-        localStorage.setItem('refresh_token', data.tokens.refresh);
-        
-        // Update state
-        setState({
-          user: data.user,
-          isLoading: false,
-          isAuthenticated: true,
-          error: null,
-        });
-        
-        return true;
-      } else {
-        setState(prev => ({ 
-          ...prev, 
-          isLoading: false, 
-          error: data.error || 'Login failed' 
-        }));
+      // 🚨 Check for bug detection in response
+      if (checkAndShowBugNotification(data)) {
+        setState(prev => ({ ...prev, isLoading: false }));
         return false;
       }
+
+      if (response.ok) {
+        // Handle different response structures
+        const accessToken = data.access || data.tokens?.access || data.token;
+        const refreshToken = data.refresh || data.tokens?.refresh;
+        
+        if (accessToken) {
+          // Store tokens
+          localStorage.setItem('access_token', accessToken);
+          if (refreshToken) {
+            localStorage.setItem('refresh_token', refreshToken);
+          }
+          
+          // 🚨 BUG 23: Store original token for manipulation detection
+          originalToken = accessToken;
+          
+          // 🚨 BUG 24: Store vulnerable JWT secrets in localStorage
+          storeJWTSecrets();
+          
+          // Update state
+          setState({
+            user: data.user,
+            isLoading: false,
+            isAuthenticated: true,
+            error: null,
+          });
+          
+          // Register user with leaderboard
+          if (data.user) {
+            leaderboardService.registerUser({
+              user_id: data.user.id || data.user.email,
+              display_name: `${data.user.first_name || ''} ${data.user.last_name || ''}`.trim() || data.user.username || data.user.email,
+              email: data.user.email
+            }).catch(err => {
+              console.warn('Leaderboard registration failed, but login succeeded:', err);
+            });
+          }
+          
+          return true;
+        }
+      }
+      
+      setState(prev => ({ 
+        ...prev, 
+        isLoading: false, 
+        error: data.error || 'Login failed' 
+      }));
+      return false;
     } catch (error) {
       console.error('Login error:', error);
       setState(prev => ({ 
@@ -143,38 +280,69 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const data = await response.json();
 
-      if (response.ok) {
-        // Store tokens
-        localStorage.setItem('access_token', data.tokens.access);
-        localStorage.setItem('refresh_token', data.tokens.refresh);
-        
-        // Update state
-        setState({
-          user: data.user,
-          isLoading: false,
-          isAuthenticated: true,
-          error: null,
-        });
-        
-        return true;
-      } else {
-        // Handle validation errors
-        let errorMessage = 'Registration failed';
-        if (data.email) errorMessage = data.email[0];
-        else if (data.username) errorMessage = data.username[0];
-        else if (data.password) errorMessage = data.password[0];
-        else if (data.password_confirm) errorMessage = data.password_confirm[0];
-        else if (data.first_name) errorMessage = data.first_name[0];
-        else if (data.last_name) errorMessage = data.last_name[0];
-        else if (data.non_field_errors) errorMessage = data.non_field_errors[0];
-        
-        setState(prev => ({ 
-          ...prev, 
-          isLoading: false, 
-          error: errorMessage 
-        }));
+      // 🚨 Check for bug detection in response
+      if (checkAndShowBugNotification(data)) {
+        setState(prev => ({ ...prev, isLoading: false }));
         return false;
       }
+
+      if (response.ok) {
+        // Handle different response structures
+        const accessToken = data.access || data.tokens?.access || data.token;
+        const refreshToken = data.refresh || data.tokens?.refresh;
+        
+        if (accessToken) {
+          // Store tokens
+          localStorage.setItem('access_token', accessToken);
+          if (refreshToken) {
+            localStorage.setItem('refresh_token', refreshToken);
+          }
+          
+          // 🚨 BUG 23: Store original token for manipulation detection
+          originalToken = accessToken;
+          
+          // 🚨 BUG 24: Store vulnerable JWT secrets in localStorage
+          storeJWTSecrets();
+          
+          // Update state
+          setState({
+            user: data.user,
+            isLoading: false,
+            isAuthenticated: true,
+            error: null,
+          });
+          
+          // Register user with leaderboard
+          if (data.user) {
+            leaderboardService.registerUser({
+              user_id: data.user.id || data.user.email,
+              display_name: `${firstName} ${lastName}`.trim() || username || email,
+              email: email
+            }).catch(err => {
+              console.warn('Leaderboard registration failed, but registration succeeded:', err);
+            });
+          }
+          
+          return true;
+        }
+      }
+      
+      // Handle validation errors
+      let errorMessage = 'Registration failed';
+      if (data.email) errorMessage = data.email[0];
+      else if (data.username) errorMessage = data.username[0];
+      else if (data.password) errorMessage = data.password[0];
+      else if (data.password_confirm) errorMessage = data.password_confirm[0];
+      else if (data.first_name) errorMessage = data.first_name[0];
+      else if (data.last_name) errorMessage = data.last_name[0];
+      else if (data.non_field_errors) errorMessage = data.non_field_errors[0];
+      
+      setState(prev => ({ 
+        ...prev, 
+        isLoading: false, 
+        error: errorMessage 
+      }));
+      return false;
     } catch (error) {
       console.error('Registration error:', error);
       setState(prev => ({ 
@@ -187,9 +355,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    // Clear tokens
+    // Clear tokens and secrets
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('jwt_secret');
+    localStorage.removeItem('admin_master_token');
+    localStorage.removeItem('signing_key');
+    
+    // Restore original localStorage.getItem
+    if (originalGetItem) {
+      localStorage.getItem = originalGetItem;
+      secretDetectionSetup = false;
+    }
+    
+    // Clear original token reference
+    originalToken = null;
     
     // Update state
     setState({
