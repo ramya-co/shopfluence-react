@@ -46,11 +46,24 @@ class ReviewSerializer(serializers.ModelSerializer):
     """Serializer for Review model"""
     user_name = serializers.CharField(source='user.get_full_name', read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
+    user_username = serializers.CharField(source='user.username', read_only=True)
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    can_edit = serializers.SerializerMethodField()
     
     class Meta:
         model = Review
-        fields = ['id', 'rating', 'title', 'comment', 'user_name', 'user_email', 'created_at']
-        read_only_fields = ['id', 'user_name', 'user_email', 'created_at']
+        fields = [
+            'id', 'rating', 'title', 'comment', 'user_name', 'user_email', 
+            'user_username', 'product_name', 'can_edit', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'user_name', 'user_email', 'user_username', 'product_name', 'created_at', 'updated_at']
+    
+    def get_can_edit(self, obj):
+        """Check if the current user can edit this review"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.user == request.user
+        return False
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -155,26 +168,41 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Review
-        fields = ['rating', 'title', 'comment']
+        fields = ['rating', 'title', 'comment', 'product']
+        
+    def validate_rating(self, value):
+        """Validate rating is within allowed range"""
+        if value < 1 or value > 5:
+            raise serializers.ValidationError("Rating must be between 1 and 5")
+        return value
     
+    def validate_title(self, value):
+        """Validate title length"""
+        if len(value.strip()) < 3:
+            raise serializers.ValidationError("Title must be at least 3 characters long")
+        return value.strip()
+    
+    def validate_comment(self, value):
+        """Validate comment length"""
+        if len(value.strip()) < 10:
+            raise serializers.ValidationError("Comment must be at least 10 characters long")
+        return value.strip()
+        
     def validate(self, attrs):
-        user = self.context['request'].user
-        product = self.context['product']
-        
-        # Check if user already reviewed this product
-        if Review.objects.filter(user=user, product=product).exists():
-            raise serializers.ValidationError("You have already reviewed this product")
-        
+        """Validate that user hasn't already reviewed this product"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            product = attrs.get('product')
+            if Review.objects.filter(user=request.user, product=product).exists():
+                raise serializers.ValidationError("You have already reviewed this product")
         return attrs
-    
+        
     def create(self, validated_data):
-        user = self.context['request'].user
-        product = self.context['product']
-        
-        review = Review.objects.create(
-            user=user,
-            product=product,
-            **validated_data
-        )
-        
-        return review
+        """Create review with authenticated user"""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            validated_data['user'] = request.user
+            validated_data['is_approved'] = True  # Auto-approve reviews
+            return super().create(validated_data)
+        else:
+            raise serializers.ValidationError("Authentication required to create review")

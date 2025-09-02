@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug Notification System Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f2f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .test-button { background: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .test-button:hover { background: #0056b3; }
+        .test-button.success { background: #28a745; }
+        .test-button.warning { background: #ffc107; color: #212529; }
+        .test-button.danger { background: #dc3545; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Bug Notification System Test Page</h1>
+        <p><strong>Purpose:</strong> This page tests all bug detection and notification functionality without interfering with the main app.</p>
+        
+        <div class="test-section">
+            <h2>🔍 System Status</h2>
+            <button class="test-button" onclick="checkSystemStatus()">Check System Status</button>
+            <div id="systemStatus"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🎯 Quick Tests</h2>
+            <button class="test-button success" onclick="runQuickTests()">Run All Quick Tests</button>
+            <button class="test-button warning" onclick="testCORS()">Test CORS</button>
+            <button class="test-button warning" onclick="testLocalStorage()">Test LocalStorage</button>
+            <button class="test-button warning" onclick="testIntegerOverflowBug()">Test Integer Overflow</button>
+            <button class="test-button warning" onclick="testRateLimitingBug()">Test Rate Limiting</button>
+            <button class="test-button info" onclick="testQuantityAndRateLimitBugs()">Test Both New Bugs</button>
+            <button class="test-button danger" onclick="simulateBugNotification()">Simulate Bug Notification</button>
+        </div>
+        
+        <div class="test-section">
+            <h2>📊 Test Results</h2>
+            <div id="testResults"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🚀 Open Main App</h2>
+            <p>The main application is running on port 8081:</p>
+            <button class="test-button success" onclick="openMainApp()">Open Main App (http://localhost:8081)</button>
+            <p><small>Log in to the main app first, then run the comprehensive tests there.</small></p>
+        </div>
+        
+        <div class="test-section">
+            <h2>📋 Expected Bug Types</h2>
+            <ul>
+                <li>✅ <strong>IDOR</strong> - Access other user profiles</li>
+                <li>✅ <strong>Debug Endpoint</strong> - Exposed debug information</li>
+                <li>✅ <strong>SQL Injection</strong> - Database injection vulnerabilities</li>
+                <li>✅ <strong>JWT Exposure</strong> - JWT secrets in localStorage</li>
+                <li>✅ <strong>User Enumeration</strong> - Username enumeration attacks</li>
+                <li>✅ <strong>Race Condition</strong> - Rapid cart additions</li>
+                <li>✅ <strong>CORS Misconfiguration</strong> - Permissive CORS headers</li>
+                <li>✅ <strong>LocalStorage Manipulation</strong> - Token manipulation detection</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const container = document.getElementById('testResults');
+            const timestamp = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = `[${timestamp}] ${message}`;
+            container.appendChild(div);
+            console.log(message);
+        }
+        
+        function checkSystemStatus() {
+            log('🔍 Checking notification system status...', 'info');
+            
+            const functions = [
+                'showBugNotification', 
+                'checkAndShowBugNotification', 
+                'manualBugCheck', 
+                'testBugEndpoint',
+                'testCORSConfiguration',
+                'testLocalStorageManipulation',
+                'testIntegerOverflow',
+                'testRateLimiting',
+                'testQuantityAndRateLimit'
+            ];
+            
+            let allAvailable = true;
+            const statusContainer = document.getElementById('systemStatus');
+            statusContainer.innerHTML = '<h3>System Functions:</h3>';
+            
+            functions.forEach(func => {
+                const available = typeof window[func] === 'function';
+                const status = available ? '✅' : '❌';
+                const color = available ? 'green' : 'red';
+                statusContainer.innerHTML += `<p style="color: ${color}">${status} ${func}</p>`;
+                
+                if (!available) {
+                    allAvailable = false;
+                    log(`❌ ${func} is not available`, 'error');
+                }
+            });
+            
+            if (allAvailable) {
+                log('✅ All notification functions are available!', 'success');
+            } else {
+                log('⚠️ Some functions are missing. Open the main app first.', 'error');
+            }
+        }
+        
+        function simulateBugNotification() {
+            log('🎯 Simulating bug notification...', 'info');
+            
+            const bugData = {
+                bug_found: 'TEST_BUG',
+                message: '🧪 Test Bug Found!',
+                description: 'This is a simulated bug for testing purposes',
+                points: 50
+            };
+            
+            if (window.checkAndShowBugNotification) {
+                window.checkAndShowBugNotification(bugData);
+                log('✅ Bug notification simulated successfully!', 'success');
+            } else {
+                log('❌ checkAndShowBugNotification not available', 'error');
+            }
+        }
+        
+        function testCORS() {
+            log('🌐 Testing CORS configuration...', 'info');
+            
+            if (window.testCORSConfiguration) {
+                window.testCORSConfiguration();
+                log('✅ CORS test initiated', 'success');
+            } else {
+                log('❌ testCORSConfiguration not available', 'error');
+            }
+        }
+        
+        function testLocalStorage() {
+            log('💾 Testing localStorage manipulation...', 'info');
+            
+            if (window.testLocalStorageManipulation) {
+                window.testLocalStorageManipulation();
+                log('✅ LocalStorage test initiated', 'success');
+            } else {
+                log('❌ testLocalStorageManipulation not available', 'error');
+            }
+        }
+        
+        function runQuickTests() {
+            log('🚀 Running quick test suite...', 'info');
+            
+            checkSystemStatus();
+            setTimeout(() => simulateBugNotification(), 1000);
+            setTimeout(() => testCORS(), 2000);
+            setTimeout(() => testLocalStorage(), 3000);
+            setTimeout(() => testIntegerOverflowBug(), 4000);
+            setTimeout(() => testRateLimitingBug(), 5000);
+            
+            setTimeout(() => {
+                log('✅ All quick tests completed! Check for notifications.', 'success');
+            }, 8000);
+        }
+        
+        function openMainApp() {
+            window.open('http://localhost:8081', '_blank');
+            log('🔗 Opening main application...', 'info');
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            log('🧪 Bug notification test page loaded', 'info');
+            log('💡 This page tests the notification system in isolation', 'info');
+            log('🎯 For full testing, use the main app at localhost:8081', 'info');
+            
+            setTimeout(checkSystemStatus, 500);
+        });
+        
+        // New testing functions for Integer Overflow and Rate Limiting
+        function testIntegerOverflowBug() {
+            log('🔢 Testing Integer Overflow...', 'info');
+            if (window.testIntegerOverflow) {
+                window.testIntegerOverflow();
+                log('✅ Integer overflow test triggered', 'success');
+            } else {
+                log('❌ testIntegerOverflow function not available', 'error');
+            }
+        }
+        
+        function testRateLimitingBug() {
+            log('🚀 Testing Rate Limiting (101 requests)...', 'info');
+            if (window.testRateLimiting) {
+                window.testRateLimiting().then(() => {
+                    log('✅ Rate limiting test completed', 'success');
+                }).catch(error => {
+                    log('❌ Rate limiting test failed: ' + error.message, 'error');
+                });
+            } else {
+                log('❌ testRateLimiting function not available', 'error');
+            }
+        }
+        
+        function testQuantityAndRateLimitBugs() {
+            log('🎯 Testing both Integer Overflow and Rate Limiting...', 'info');
+            if (window.testQuantityAndRateLimit) {
+                window.testQuantityAndRateLimit();
+                log('✅ Combined test suite triggered', 'success');
+            } else {
+                log('❌ testQuantityAndRateLimit function not available', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

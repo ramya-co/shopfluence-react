@@ -1,6 +1,7 @@
 from rest_framework import generics, permissions, status, filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from django.db.models import Q, Avg, Count
@@ -203,7 +204,7 @@ class ProductReviewsView(generics.ListCreateAPIView):
     def get_queryset(self):
         product_slug = self.kwargs.get('slug')
         product = get_object_or_404(Product, slug=product_slug, is_active=True)
-        return Review.objects.filter(product=product, is_approved=True)
+        return Review.objects.filter(product=product, is_approved=True).select_related('user')
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -215,6 +216,37 @@ class ProductReviewsView(generics.ListCreateAPIView):
         product_slug = self.kwargs.get('slug')
         context['product'] = get_object_or_404(Product, slug=product_slug, is_active=True)
         return context
+
+    def perform_create(self, serializer):
+        """Override to ensure proper review creation and response"""
+        review = serializer.save()
+        # Review is auto-approved (default=True in model)
+        return review
+
+
+class UserReviewsView(generics.ListAPIView):
+    """List all reviews by the authenticated user"""
+    serializer_class = ReviewSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Review.objects.filter(user=self.request.user).select_related('product')
+
+
+class ReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete a specific review (only by the author)"""
+    serializer_class = ReviewCreateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Review.objects.filter(user=self.request.user)
+
+    def get_object(self):
+        review = super().get_object()
+        # Ensure user can only access their own reviews
+        if review.user != self.request.user:
+            raise PermissionDenied("You can only modify your own reviews")
+        return review
 
 
 @api_view(['GET'])

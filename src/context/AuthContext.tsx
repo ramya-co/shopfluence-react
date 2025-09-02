@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { checkAndShowBugNotification } from '@/lib/notifications';
+import { updateLeaderboardUser } from '@/lib/notifications';
 import { leaderboardService } from '@/lib/leaderboard';
 
 // 🚨 BUG 23: Local Storage Manipulation Detection
@@ -123,8 +124,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const detectManipulation = () => {
       const currentToken = localStorage.getItem('access_token');
       if (originalToken && currentToken && currentToken !== originalToken) {
-        // Token manipulation detected
-        if (typeof window !== 'undefined') {
+        // Token manipulation detected - use proper notification system
+        const bugData = {
+          bug_found: 'LOCALSTORAGE_MANIPULATION',
+          message: '🎉 Bug Found: Local Storage Manipulation!',
+          description: 'Local storage token manipulation detected!',
+          points: 70
+        };
+        
+        // Use the global notification system for consistency
+        if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+          (window as any).checkAndShowBugNotification(bugData);
+        } else {
+          // Fallback notification (should not happen if system is loaded)
           const notification = document.createElement('div');
           notification.style.cssText = `
             position: fixed; top: 20px; right: 20px; z-index: 10000;
@@ -134,14 +146,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             max-width: 300px; font-family: Arial, sans-serif;
           `;
           notification.innerHTML = `
-            <h3 style="margin: 0 0 10px 0;">🎉 Bug Found!</h3>
-            <p><strong>LOCALSTORAGE_MANIPULATION</strong></p>
-            <p>Local storage token manipulation detected!</p>
-            <small>Points: 70</small>
+            <h3 style="margin: 0 0 10px 0;">${bugData.message}</h3>
+            <p><strong>${bugData.bug_found}</strong></p>
+            <p>${bugData.description}</p>
+            <small>Points: ${bugData.points}</small>
           `;
           document.body.appendChild(notification);
           setTimeout(() => notification.remove(), 5000);
         }
+        
+        // Reset the original token to prevent repeated notifications
+        originalToken = currentToken;
       }
     };
     
@@ -172,6 +187,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (response.ok) {
         const userData = await response.json();
+        
+        // Store user data for leaderboard access
+        sessionStorage.setItem('current_user_data', JSON.stringify(userData));
+        
         setState({
           user: userData,
           isLoading: false,
@@ -225,6 +244,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             isAuthenticated: true,
             error: null,
           });
+          
+          // Store user data for leaderboard access
+          sessionStorage.setItem('current_user_data', JSON.stringify(data.user));
+          
+          // Update leaderboard user info
+          updateLeaderboardUser();
           
           // Register user with leaderboard
           if (data.user) {
@@ -312,6 +337,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             error: null,
           });
           
+          // Store user data for leaderboard access
+          sessionStorage.setItem('current_user_data', JSON.stringify(data.user));
+          
+          // Update leaderboard user info
+          updateLeaderboardUser();
+          
           // Register user with leaderboard
           if (data.user) {
             leaderboardService.registerUser({
@@ -361,6 +392,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('jwt_secret');
     localStorage.removeItem('admin_master_token');
     localStorage.removeItem('signing_key');
+    
+    // Clear user data and leaderboard cache
+    sessionStorage.removeItem('current_user_data');
+    sessionStorage.removeItem('user_display_name');
+    sessionStorage.removeItem('bug_hunter_name');
+    sessionStorage.removeItem('session_user_id');
     
     // Restore original localStorage.getItem
     if (originalGetItem) {

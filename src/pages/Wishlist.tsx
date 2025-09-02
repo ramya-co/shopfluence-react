@@ -87,8 +87,8 @@ const Wishlist: React.FC = () => {
     }
   };
 
-  const addToCart = (product: any) => {
-    addItem(product);
+  const addToCart = (product: any, e?: React.MouseEvent) => {
+    addItem(product, 1, e?.nativeEvent);
     toast({
       title: "Added to cart",
       description: `${product.name} has been added to your cart.`,
@@ -264,8 +264,9 @@ const Wishlist: React.FC = () => {
                   <Button
                     size="sm"
                     className="flex-1"
-                    onClick={() => addToCart(item.product)}
+                    onClick={(e) => addToCart(item.product, e)}
                     disabled={!item.product.is_in_stock}
+                    data-testid="add-to-cart"
                   >
                     <ShoppingCart className="w-4 w-4 mr-2" />
                     Add to Cart

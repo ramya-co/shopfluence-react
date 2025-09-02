@@ -79,6 +79,20 @@ export const api = {
     featured: () => apiCall('/products/featured/'),
     newArrivals: () => apiCall('/products/new-arrivals/'),
     bestsellers: () => apiCall('/products/bestsellers/'),
+    // Review endpoints
+    reviews: (productSlug: string) => apiCall(`/products/${productSlug}/reviews/`),
+    createReview: (productSlug: string, data: any) => 
+      apiCall(`/products/${productSlug}/reviews/`, { method: 'POST', body: JSON.stringify(data) }),
+  },
+  
+  // Review endpoints
+  reviews: {
+    list: () => apiCall('/reviews/'),
+    get: (id: number) => apiCall(`/reviews/${id}/`),
+    update: (id: number, data: any) => 
+      apiCall(`/reviews/${id}/`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: number) => apiCall(`/reviews/${id}/`, { method: 'DELETE' }),
+    userReviews: () => apiCall('/reviews/user/'),
   },
   
   // Orders endpoints

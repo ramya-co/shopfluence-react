@@ -27,6 +27,8 @@ urlpatterns = [
     
     # Product reviews
     path('products/<slug:slug>/reviews/', views.ProductReviewsView.as_view(), name='product-reviews'),
+    path('reviews/', views.UserReviewsView.as_view(), name='user-reviews'),
+    path('reviews/<int:pk>/', views.ReviewDetailView.as_view(), name='review-detail'),
     
     # Statistics
     path('stats/', views.product_stats, name='product-stats'),

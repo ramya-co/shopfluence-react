@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Rating } from '@/components/ui/Rating';
 import { ProductCard } from '@/components/product/ProductCard';
+import ReviewSection from '@/components/product/ReviewSection';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -40,6 +41,7 @@ const ProductDetail: React.FC = () => {
         // Transform API product to match frontend interface
         const transformedProduct = {
           id: data.id.toString(),
+          slug: data.slug,
           name: data.name,
           price: parseFloat(data.price),
           originalPrice: data.original_price ? parseFloat(data.original_price) : undefined,
@@ -137,9 +139,9 @@ const ProductDetail: React.FC = () => {
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : product.discount;
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e?: React.MouseEvent) => {
     for (let i = 0; i < quantity; i++) {
-      addItem(product);
+      addItem(product, 1, i === 0 ? e?.nativeEvent : undefined); // Only pass click event for first item to detect manipulation
     }
     toast({
       title: "Added to cart",
@@ -316,23 +318,15 @@ const ProductDetail: React.FC = () => {
                       const newQuantity = quantity + 1;
                       // 🚨 BUG 14: Integer Overflow Detection
                       if (newQuantity > Number.MAX_SAFE_INTEGER || newQuantity > 999999999) {
-                        if (typeof window !== 'undefined') {
-                          const notification = document.createElement('div');
-                          notification.style.cssText = `
-                            position: fixed; top: 20px; right: 20px; z-index: 10000;
-                            background: linear-gradient(135deg, #4CAF50, #45a049);
-                            color: white; padding: 20px; border-radius: 10px;
-                            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-                            max-width: 300px; font-family: Arial, sans-serif;
-                          `;
-                          notification.innerHTML = `
-                            <h3 style="margin: 0 0 10px 0;">🎉 Bug Found!</h3>
-                            <p><strong>INTEGER_OVERFLOW</strong></p>
-                            <p>Integer overflow in quantity!</p>
-                            <small>Points: 75</small>
-                          `;
-                          document.body.appendChild(notification);
-                          setTimeout(() => notification.remove(), 5000);
+                        const bugData = {
+                          bug_found: 'INTEGER_OVERFLOW',
+                          message: '🎉 Bug Found: Integer Overflow in Quantity!',
+                          description: 'Quantity value exceeded safe integer limits',
+                          points: 75
+                        };
+
+                        if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+                          (window as any).checkAndShowBugNotification(bugData);
                         }
                         return;
                       }
@@ -352,6 +346,7 @@ const ProductDetail: React.FC = () => {
                   disabled={!product.inStock}
                   className="flex-1 bg-primary hover:bg-primary-hover"
                   size="lg"
+                  data-testid="add-to-cart"
                 >
                   <ShoppingCart className="w-5 h-5 mr-2" />
                   Add to Cart
@@ -417,61 +412,16 @@ const ProductDetail: React.FC = () => {
             </TabsContent>
             
             <TabsContent value="reviews" className="mt-6">
-              <div className="space-y-6">
-                {/* Review Summary */}
-                <div className="flex items-center gap-8 p-6 bg-muted/30 rounded-lg">
-                  <div className="text-center">
-                    <div className="text-4xl font-bold mb-2">{product.rating}</div>
-                    <Rating rating={product.rating} size="lg" />
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Based on {product.reviewCount} reviews
-                    </p>
-                  </div>
-                  <div className="flex-1">
-                    {[5, 4, 3, 2, 1].map((rating) => (
-                      <div key={rating} className="flex items-center gap-2 mb-1">
-                        <span className="text-sm w-8">{rating}</span>
-                        <Star className="w-4 h-4 fill-rating text-rating" />
-                        <div className="flex-1 bg-border rounded-full h-2">
-                          <div 
-                            className="bg-rating h-2 rounded-full" 
-                            style={{ width: `${Math.random() * 100}%` }}
-                          />
-                        </div>
-                        <span className="text-sm text-muted-foreground w-8">
-                          {Math.floor(Math.random() * 100)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Sample Reviews */}
-                <div className="space-y-4">
-                  {[1, 2, 3].map((index) => (
-                    <div key={index} className="border border-border rounded-lg p-6">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-                          <span className="font-medium">U{index}</span>
-                        </div>
-                        <div>
-                          <p className="font-medium">User {index}</p>
-                          <div className="flex items-center gap-2">
-                            <Rating rating={4 + Math.random()} size="sm" />
-                            <span className="text-sm text-muted-foreground">
-                              {Math.floor(Math.random() * 30)} days ago
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <p className="text-muted-foreground">
-                        Great product! Really satisfied with the quality and performance. 
-                        Would definitely recommend to others.
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <ReviewSection 
+                product={{
+                  id: parseInt(product.id),
+                  slug: product.slug,
+                  name: product.name,
+                  average_rating: product.rating,
+                  review_count: product.reviewCount
+                }} 
+                onReviewUpdate={() => loadProduct(id!)} 
+              />
             </TabsContent>
           </Tabs>
         </div>

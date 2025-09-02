@@ -186,7 +186,7 @@ class Review(models.Model):
     rating = models.PositiveIntegerField(choices=RATING_CHOICES)
     title = models.CharField(max_length=200, blank=True)
     comment = models.TextField()
-    is_approved = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=True)  # Auto-approve for better UX
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -195,4 +195,4 @@ class Review(models.Model):
         unique_together = ['product', 'user']
 
     def __str__(self):
-        return f"{self.user.email} - {self.product.name} - {self.rating} stars"
+        return f"{self.user.get_full_name() or self.user.email} - {self.product.name} - {self.rating} stars"

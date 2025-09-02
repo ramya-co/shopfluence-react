@@ -34,7 +34,7 @@ interface CartState {
 
 interface CartContextType {
   state: CartState;
-  addItem: (product: any, quantity?: number) => Promise<void>;
+  addItem: (product: any, quantity?: number, clickEvent?: MouseEvent) => Promise<void>;
   removeItem: (itemId: number) => Promise<void>;
   updateQuantity: (itemId: number, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -127,7 +127,98 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   
 
-  const addItem = async (product: any, quantity: number = 1) => {
+  const addItem = async (product: any, quantity: number = 1, clickEvent?: MouseEvent) => {
+    // 🚨 BUG 13: Price Manipulation Detection
+    if (clickEvent && clickEvent.target instanceof HTMLElement) {
+      // Look for price elements near the button
+      const button = clickEvent.target as HTMLElement;
+      const addToCartButton = button.closest('[data-testid="add-to-cart"], button') as HTMLElement;
+      
+      if (addToCartButton) {
+        // Check for manipulated data-price attribute
+        const manipulatedPrice = addToCartButton.getAttribute('data-price');
+        if (manipulatedPrice !== null) {
+          const priceValue = parseFloat(manipulatedPrice);
+          if (!isNaN(priceValue) && Math.abs(priceValue - product.price) > 0.01) {
+            // Price manipulation detected
+            const bugData = {
+              bug_found: 'PRICE_MANIPULATION',
+              message: '🎉 Bug Found: Price Manipulation!',
+              description: `Original price: $${product.price}, Manipulated price: $${priceValue}`,
+              points: 85
+            };
+            
+            // Use the global notification system
+            if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+              (window as any).checkAndShowBugNotification(bugData);
+            } else {
+              // Fallback notification
+              const notification = document.createElement('div');
+              notification.style.cssText = `
+                position: fixed; top: 20px; right: 20px; z-index: 10000;
+                background: linear-gradient(135deg, #4CAF50, #45a049);
+                color: white; padding: 20px; border-radius: 10px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                max-width: 300px; font-family: Arial, sans-serif;
+                animation: slideIn 0.3s ease-out;
+              `;
+              notification.innerHTML = `
+                <h3 style="margin: 0 0 10px 0;">${bugData.message}</h3>
+                <p style="font-weight: bold;">${bugData.bug_found}</p>
+                <p>${bugData.description}</p>
+                <small>Points: ${bugData.points}</small>
+              `;
+              document.body.appendChild(notification);
+              setTimeout(() => notification.remove(), 5000);
+            }
+            return; // Don't add to cart with manipulated price
+          }
+        }
+        
+        // Also check for manipulated price in nearby price display elements
+        const priceElements = addToCartButton.closest('.product, .card, [data-product-id]')?.querySelectorAll('[data-price], .price, .product-price');
+        if (priceElements) {
+          priceElements.forEach((priceEl) => {
+            const manipulatedPrice = priceEl.getAttribute('data-price') || priceEl.textContent?.replace(/[^0-9.]/g, '');
+            if (manipulatedPrice) {
+              const priceValue = parseFloat(manipulatedPrice);
+              if (!isNaN(priceValue) && Math.abs(priceValue - product.price) > 0.01) {
+                const bugData = {
+                  bug_found: 'PRICE_MANIPULATION',
+                  message: '🎉 Bug Found: Price Manipulation!',
+                  description: `Original price: $${product.price}, Manipulated display price: $${priceValue}`,
+                  points: 85
+                };
+                
+                if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+                  (window as any).checkAndShowBugNotification(bugData);
+                } else {
+                  const notification = document.createElement('div');
+                  notification.style.cssText = `
+                    position: fixed; top: 20px; right: 20px; z-index: 10000;
+                    background: linear-gradient(135deg, #4CAF50, #45a049);
+                    color: white; padding: 20px; border-radius: 10px;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                    max-width: 300px; font-family: Arial, sans-serif;
+                    animation: slideIn 0.3s ease-out;
+                  `;
+                  notification.innerHTML = `
+                    <h3 style="margin: 0 0 10px 0;">${bugData.message}</h3>
+                    <p style="font-weight: bold;">${bugData.bug_found}</p>
+                    <p>${bugData.description}</p>
+                    <small>Points: ${bugData.points}</small>
+                  `;
+                  document.body.appendChild(notification);
+                  setTimeout(() => notification.remove(), 5000);
+                }
+                return; // Don't add to cart with manipulated price
+              }
+            }
+          });
+        }
+      }
+    }
+    
     // 🚨 BUG 11: Race Condition Detection - More reasonable 5-second window
     const currentTime = Date.now();
     
