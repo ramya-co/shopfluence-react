@@ -3,11 +3,14 @@ import { Heart, Trash2, ShoppingCart, Eye, Image as ImageIcon } from 'lucide-rea
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
+import { testWishlistPrivacyBypass } from '@/lib/notifications';
 
 interface WishlistItem {
   id: number;
@@ -30,6 +33,8 @@ const Wishlist: React.FC = () => {
   const { toast } = useToast();
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [wishlistName, setWishlistName] = useState('My Wishlist');
+  const [isWishlistPublic, setIsWishlistPublic] = useState(false);
 
   useEffect(() => {
     if (authState.isAuthenticated) {
@@ -119,6 +124,25 @@ const Wishlist: React.FC = () => {
     }
   };
 
+  const updateWishlistName = (newName: string) => {
+    setWishlistName(newName);
+    
+    // 🚨 Bug detection: Check for privacy bypass strings
+    const isPrivacyBypass = testWishlistPrivacyBypass(newName);
+    
+    if (isPrivacyBypass) {
+      // Simulate making wishlist public when bypass string is detected
+      setIsWishlistPublic(true);
+      toast({
+        title: "Wishlist Settings Updated",
+        description: "Special mode activated - wishlist is now public!",
+        variant: "default",
+      });
+    } else {
+      setIsWishlistPublic(false);
+    }
+  };
+
   if (!authState.isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -173,11 +197,28 @@ const Wishlist: React.FC = () => {
     <div className="min-h-screen bg-background">
       <div className="bg-muted/30 border-b border-border">
         <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">My Wishlist</h1>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-4 mb-2">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="wishlist-name">Wishlist Name</Label>
+                  <Input
+                    id="wishlist-name"
+                    value={wishlistName}
+                    onChange={(e) => updateWishlistName(e.target.value)}
+                    placeholder="Enter wishlist name..."
+                    className="max-w-xs"
+                  />
+                </div>
+                {isWishlistPublic && (
+                  <Badge variant="destructive" className="self-end">
+                    PUBLIC
+                  </Badge>
+                )}
+              </div>
               <p className="text-muted-foreground">
                 {wishlistItems.length} item{wishlistItems.length !== 1 ? 's' : ''} in your wishlist
+                {isWishlistPublic && ' • Visible to everyone'}
               </p>
             </div>
             <Button

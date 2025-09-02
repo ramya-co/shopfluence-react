@@ -43,6 +43,16 @@
         </div>
         
         <div class="test-section">
+            <h2>🆕 New Bug Tests</h2>
+            <button class="test-button warning" onclick="testSourceMapSecretsBug()">Test Source Map Secrets</button>
+            <button class="test-button warning" onclick="testDebugCookieBug()">Test Debug Cookie</button>
+            <button class="test-button warning" onclick="testIDORReviewDeletionBug()">Test IDOR Review Deletion</button>
+            <button class="test-button warning" onclick="testXXEInjectionBug()">Test XXE Injection</button>
+            <button class="test-button warning" onclick="testSecondOrderSQLBug()">Test Second-Order SQL</button>
+            <button class="test-button info" onclick="testAllNewBugs()">Test All New Bugs</button>
+        </div>
+        
+        <div class="test-section">
             <h2>📊 Test Results</h2>
             <div id="testResults"></div>
         </div>
@@ -92,7 +102,13 @@
                 'testLocalStorageManipulation',
                 'testIntegerOverflow',
                 'testRateLimiting',
-                'testQuantityAndRateLimit'
+                'testQuantityAndRateLimit',
+                'testSourceMapSecrets',
+                'testDebugCookie',
+                'testWishlistPrivacyBypass',
+                'testIDORReviewDeletion',
+                'testXXEInjection',
+                'testSecondOrderSQLInjection'
             ];
             
             let allAvailable = true;
@@ -219,6 +235,72 @@
             } else {
                 log('❌ testQuantityAndRateLimit function not available', 'error');
             }
+        }
+        
+        // New bug testing functions
+        function testSourceMapSecretsBug() {
+            log('🔍 Testing Source Map Secrets...', 'info');
+            if (window.testSourceMapSecrets) {
+                window.testSourceMapSecrets();
+                log('✅ Source map secrets test triggered', 'success');
+            } else {
+                log('❌ testSourceMapSecrets function not available', 'error');
+            }
+        }
+        
+        function testDebugCookieBug() {
+            log('🍪 Testing Debug Cookie...', 'info');
+            if (window.testDebugCookie) {
+                window.testDebugCookie();
+                log('✅ Debug cookie test triggered', 'success');
+            } else {
+                log('❌ testDebugCookie function not available', 'error');
+            }
+        }
+        
+        function testIDORReviewDeletionBug() {
+            log('🗑️ Testing IDOR Review Deletion...', 'info');
+            if (window.testIDORReviewDeletion) {
+                // Test with a sample review ID
+                window.testIDORReviewDeletion(1);
+                log('✅ IDOR review deletion test triggered', 'success');
+            } else {
+                log('❌ testIDORReviewDeletion function not available', 'error');
+            }
+        }
+        
+        function testXXEInjectionBug() {
+            log('⚠️ Testing XXE Injection...', 'info');
+            if (window.testXXEInjection) {
+                window.testXXEInjection();
+                log('✅ XXE injection test triggered', 'success');
+            } else {
+                log('❌ testXXEInjection function not available', 'error');
+            }
+        }
+        
+        function testSecondOrderSQLBug() {
+            log('💉 Testing Second-Order SQL Injection...', 'info');
+            if (window.testSecondOrderSQLInjection) {
+                window.testSecondOrderSQLInjection();
+                log('✅ Second-order SQL injection test triggered', 'success');
+            } else {
+                log('❌ testSecondOrderSQLInjection function not available', 'error');
+            }
+        }
+        
+        function testAllNewBugs() {
+            log('🎯 Testing all new bugs...', 'info');
+            
+            setTimeout(() => testSourceMapSecretsBug(), 500);
+            setTimeout(() => testDebugCookieBug(), 1500);
+            setTimeout(() => testIDORReviewDeletionBug(), 2500);
+            setTimeout(() => testXXEInjectionBug(), 3500);
+            setTimeout(() => testSecondOrderSQLBug(), 4500);
+            
+            setTimeout(() => {
+                log('✅ All new bug tests completed!', 'success');
+            }, 6000);
         }
     </script>
 </body>

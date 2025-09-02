@@ -29,6 +29,14 @@ urlpatterns = [
     path('products/<slug:slug>/reviews/', views.ProductReviewsView.as_view(), name='product-reviews'),
     path('reviews/', views.UserReviewsView.as_view(), name='user-reviews'),
     path('reviews/<int:pk>/', views.ReviewDetailView.as_view(), name='review-detail'),
+    path('reviews/delete/<int:review_id>/', views.delete_review_vulnerable, name='delete-review-vulnerable'),  # 🚨 BUG 17: IDOR
+    
+    # Admin endpoints
+    path('admin/import/', views.import_products_xml, name='import-xml'),  # 🚨 BUG 18: XXE
+    
+    # Analytics endpoints
+    path('analytics/store-search/', views.store_search_term, name='store-search'),  # 🚨 BUG 19: Second-order SQL
+    path('analytics/popular-searches/', views.get_popular_searches, name='popular-searches'),  # 🚨 BUG 19: Second-order SQL
     
     # Statistics
     path('stats/', views.product_stats, name='product-stats'),

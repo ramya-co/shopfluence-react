@@ -354,3 +354,174 @@ def rate_limit_test(request):
         'message': 'Request processed',
         'count': request_counts[client_ip]['count']
     })
+
+
+# 🚨 BUG 17: IDOR - Delete Other People's Reviews
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def delete_review_vulnerable(request, review_id):
+    """Vulnerable endpoint that allows deleting any review (IDOR)"""
+    try:
+        # VULNERABLE: No ownership check - anyone can delete any review
+        review = get_object_or_404(Review, id=review_id)
+        review_owner = review.user.username if review.user else 'Anonymous'
+        current_user = request.user.username
+        
+        # Delete the review without checking ownership
+        review.delete()
+        
+        # If different users, it's an IDOR bug
+        if review_owner != current_user:
+            return Response({
+                'bug_found': 'IDOR_REVIEW_DELETE',
+                'message': '🎉 Bug Found: Unauthorized Review Deletion Detected!',
+                'description': f'User {current_user} deleted review by {review_owner}',
+                'points': 90,
+                'deleted_review_id': review_id,
+                'original_owner': review_owner,
+                'deleting_user': current_user
+            })
+        else:
+            return Response({
+                'message': 'Review deleted successfully',
+                'deleted_review_id': review_id
+            })
+            
+    except Exception as e:
+        return Response({
+            'error': 'Failed to delete review',
+            'detail': str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# 🚨 BUG 18: XXE in Product Import
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])  # Should be admin only, but we'll make it less secure
+def import_products_xml(request):
+    """Vulnerable XML import endpoint (XXE)"""
+    try:
+        xml_data = request.data.get('xml_content', '')
+        
+        if not xml_data:
+            return Response({
+                'error': 'No XML content provided'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check for XXE attack patterns
+        xxe_patterns = [
+            '<!ENTITY',
+            'SYSTEM',
+            'file://',
+            '/etc/passwd',
+            'ENTITY % dtd',
+            'PUBLIC'
+        ]
+        
+        xml_content_upper = xml_data.upper()
+        detected_patterns = []
+        
+        for pattern in xxe_patterns:
+            if pattern.upper() in xml_content_upper:
+                detected_patterns.append(pattern)
+        
+        if detected_patterns:
+            return Response({
+                'bug_found': 'XXE_INJECTION',
+                'message': '🎉 Bug Found: XXE Vulnerability in Product Import!',
+                'description': f'XML External Entity injection detected: {", ".join(detected_patterns)}',
+                'points': 95,
+                'detected_patterns': detected_patterns,
+                'xml_preview': xml_data[:200] + '...' if len(xml_data) > 200 else xml_data
+            })
+        else:
+            return Response({
+                'message': 'XML processed successfully',
+                'status': 'No products imported (demo mode)'
+            })
+            
+    except Exception as e:
+        return Response({
+            'error': 'XML processing failed',
+            'detail': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# 🚨 BUG 19: Second-Order SQL Injection
+stored_search_terms = {}  # Simulate database storage
+
+@api_view(['POST'])
+@permission_classes([permissions.AllowAny])
+def store_search_term(request):
+    """Store search term for analytics (vulnerable to second-order SQL injection)"""
+    search_term = request.data.get('search_term', '')
+    user_ip = request.META.get('REMOTE_ADDR', 'unknown')
+    
+    if not search_term:
+        return Response({'error': 'No search term provided'}, status=400)
+    
+    # Store the search term (in real app, this would go to database)
+    if user_ip not in stored_search_terms:
+        stored_search_terms[user_ip] = []
+    
+    stored_search_terms[user_ip].append(search_term)
+    
+    return Response({
+        'message': 'Search term stored for analytics',
+        'stored_term': search_term
+    })
+
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def get_popular_searches(request):
+    """Get popular searches (vulnerable to second-order SQL injection)"""
+    try:
+        # Simulate SQL injection vulnerability when processing stored terms
+        sql_injection_patterns = [
+            "' OR '1'='1",
+            "'; DROP TABLE",
+            "' UNION SELECT",
+            "' AND 1=1--",
+            "' OR 1=1#",
+            "'; INSERT INTO",
+            "' OR SLEEP(5)--"
+        ]
+        
+        # Check all stored search terms for SQL injection patterns
+        detected_injections = []
+        for user_ip, terms in stored_search_terms.items():
+            for term in terms:
+                for pattern in sql_injection_patterns:
+                    if pattern.lower() in term.lower():
+                        detected_injections.append({
+                            'term': term,
+                            'pattern': pattern,
+                            'user_ip': user_ip
+                        })
+        
+        if detected_injections:
+            return Response({
+                'bug_found': 'SECOND_ORDER_SQL_INJECTION',
+                'message': '🎉 Bug Found: Second-Order SQL Injection Detected!',
+                'description': f'Malicious SQL payload stored and executed: {detected_injections[0]["pattern"]}',
+                'points': 100,
+                'detected_injections': detected_injections[:3],  # Limit to first 3
+                'total_detections': len(detected_injections)
+            })
+        else:
+            # Return normal response
+            all_terms = []
+            for terms in stored_search_terms.values():
+                all_terms.extend(terms)
+            
+            return Response({
+                'message': 'Popular searches retrieved',
+                'search_terms': all_terms[-10:],  # Last 10 terms
+                'total_stored': len(all_terms)
+            })
+            
+    except Exception as e:
+        return Response({
+            'error': 'Failed to retrieve popular searches',
+            'detail': str(e)
+        }, status=500)
