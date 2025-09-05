@@ -38,6 +38,7 @@ const ProductDetail: React.FC = () => {
       const response = await api.products.get(slug);
       if (response.ok) {
         const data = await response.json();
+        console.log('Loaded product data:', data);
         // Transform API product to match frontend interface
         const transformedProduct = {
           id: data.id.toString(),
@@ -49,8 +50,10 @@ const ProductDetail: React.FC = () => {
           reviewCount: data.review_count || 0,
           category: data.category.slug,
           brand: typeof data.brand === 'object' ? data.brand.name : data.brand,
-          image: data.image || 'https://via.placeholder.com/400x400',
-          images: [data.image || 'https://via.placeholder.com/400x400'],
+          image: data.image.image || 'https://via.placeholder.com/400x400',
+          images: Array.isArray(data.images) && data.images.length > 0
+            ? data.images
+            : [data.image || 'https://via.placeholder.com/400x400'],
           description: data.description || data.short_description || '',
           specifications: {
             SKU: data.sku,
@@ -244,7 +247,7 @@ const ProductDetail: React.FC = () => {
             {/* Main Image */}
             <div className="aspect-square bg-muted rounded-lg overflow-hidden">
               <img
-                src={product.images[selectedImage]}
+                src={product.images[selectedImage].image}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
@@ -255,7 +258,10 @@ const ProductDetail: React.FC = () => {
               {product.images.map((image, index) => (
                 <button
                   key={index}
-                  onClick={() => setSelectedImage(index)}
+                  onClick={() => {
+                    console.log('Thumbnail clicked:', { index, image });
+                    setSelectedImage(index);
+                  }}
                   className={cn(
                     'flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-colors',
                     selectedImage === index 
@@ -264,7 +270,7 @@ const ProductDetail: React.FC = () => {
                   )}
                 >
                   <img
-                    src={image}
+                    src={image.image}
                     alt={`${product.name} ${index + 1}`}
                     className="w-full h-full object-cover"
                   />

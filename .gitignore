@@ -22,3 +22,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+/ecommerce/backend/venv/
+ecommerce/backend/db.sqlite3

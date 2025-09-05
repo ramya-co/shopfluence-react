@@ -28,10 +28,24 @@ class BrandSerializer(serializers.ModelSerializer):
 
 class ProductImageSerializer(serializers.ModelSerializer):
     """Serializer for ProductImage model"""
-    
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = ProductImage
         fields = ['id', 'image', 'alt_text', 'is_primary', 'order']
+
+    def get_image(self, obj):
+        # If image is a remote URL, return as is
+        image_url = str(obj.image)
+        if image_url.startswith('http://') or image_url.startswith('https://'):
+            return image_url
+        # Otherwise, build absolute URI for local files
+        request = self.context.get('request')
+        if obj.image and request:
+            return request.build_absolute_uri(obj.image.url)
+        elif obj.image:
+            return obj.image.url
+        return None
 
 
 class ProductSpecificationSerializer(serializers.ModelSerializer):
@@ -68,36 +82,27 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
     """Serializer for Product model"""
-    category = CategorySerializer(read_only=True)
-    brand = BrandSerializer(read_only=True)
-    price = serializers.SerializerMethodField()
-    original_price = serializers.SerializerMethodField()
-    discount_percentage = serializers.IntegerField(read_only=True)
     images = ProductImageSerializer(many=True, read_only=True)
-    specifications = ProductSpecificationSerializer(many=True, read_only=True)
-    reviews = ReviewSerializer(many=True, read_only=True)
-    average_rating = serializers.FloatField(read_only=True)
-    review_count = serializers.IntegerField(read_only=True)
-    is_in_stock = serializers.BooleanField(read_only=True)
-    is_low_stock = serializers.BooleanField(read_only=True)
-    
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'slug', 'description', 'short_description', 'price', 'original_price',
-            'discount_percentage', 'sku', 'stock_quantity', 'category', 'brand', 'is_active',
-            'is_featured', 'is_new_arrival', 'is_bestseller', 'weight', 'length', 'width',
-            'height', 'images', 'specifications', 'reviews', 'average_rating', 'review_count',
-            'is_in_stock', 'is_low_stock', 'created_at'
+            'id', 'slug', 'name', 'price', 'original_price', 'discount_percentage',
+            'average_rating', 'review_count', 'category', 'brand', 'image', 'images',
+            'description', 'short_description', 'sku', 'is_in_stock', 'is_new_arrival',
+            'is_bestseller'
         ]
-    
-    def get_price(self, obj):
-        """Ensure price is returned as a number"""
-        return float(obj.price) if obj.price else 0.0
-    
-    def get_original_price(self, obj):
-        """Ensure original_price is returned as a number"""
-        return float(obj.original_price) if obj.original_price else 0.0
+
+    def get_image(self, obj):
+        request = self.context.get('request')
+        if obj.images.exists():
+            primary = obj.images.filter(is_primary=True).first() or obj.images.first()
+            if primary and primary.image and request:
+                return request.build_absolute_uri(primary.image.url)
+            elif primary and primary.image:
+                return primary.image.url
+        return None
 
 
 class ProductListSerializer(serializers.ModelSerializer):

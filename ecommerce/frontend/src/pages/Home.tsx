@@ -565,7 +565,7 @@ const Home: React.FC = () => {
       </section>
 
       {/* Newsletter Section */}
-      <section className="py-16 bg-amazon-dark-blue text-white">
+      <section className="py-16 bg-gradient-to-r from-slate-900 via-blue-900 to-blue-900 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Stay in the Loop</h2>
           <p className="text-lg mb-8 opacity-90">

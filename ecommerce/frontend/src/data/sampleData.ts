@@ -236,7 +236,7 @@ export const heroSlides = [
     subtitle: "Titanium. So strong. So light. So Pro.",
     image: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=1200&h=600&fit=crop",
     cta: "Shop Now",
-    link: "/products/1"
+    link: "product/iphone-15-pro"
   },
   {
     id: 2,

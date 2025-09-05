@@ -60,7 +60,6 @@ const ProductListing: React.FC = () => {
       const response = await api.products.list(queryString);
       if (response.ok) {
         const data = await response.json();
-        // Transform API products to match frontend interface
         const transformedProducts = data.results.map((product: any) => ({
           id: product.id.toString(),
           slug: product.slug,
@@ -82,9 +81,14 @@ const ProductListing: React.FC = () => {
           isBestseller: product.is_bestseller,
         }));
         setProducts(transformedProducts);
-        // Calculate unique brands from API products
         const brands = Array.from(new Set(transformedProducts.map(product => product.brand))).sort() as string[];
         setAllBrands(brands);
+
+        // Set price range based on products
+        if (transformedProducts.length > 0) {
+          const prices = transformedProducts.map(p => p.price);
+          setPriceRange([Math.min(...prices), Math.max(...prices)]);
+        }
       }
     } catch (error) {
       console.error('Error loading products:', error);

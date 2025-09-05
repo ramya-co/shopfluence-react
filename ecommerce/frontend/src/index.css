@@ -30,15 +30,15 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 9%;
 
-    /* Amazon-inspired primary (orange) */
-    --primary: 25 100% 56%;
+    /* Amazon-inspired primary (now blue, slightly darker) */
+    --primary: 210 100% 45%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 25 100% 50%;
+    --primary-hover: 210 100% 40%;
 
-    /* Secondary colors (Amazon blue) */
-    --secondary: 210 100% 50%;
+    /* Secondary colors (Amazon orange, swapped) */
+    --secondary: 25 100% 56%;
     --secondary-foreground: 0 0% 100%;
-    --secondary-hover: 210 100% 45%;
+    --secondary-hover: 25 100% 50%;
 
     /* Muted colors */
     --muted: 0 0% 96%;
@@ -63,11 +63,11 @@
     /* Border and input */
     --border: 0 0% 89%;
     --input: 0 0% 89%;
-    --ring: 25 100% 56%;
+    --ring: 210 100% 45%;
 
     /* Ecommerce specific colors */
     --amazon-orange: 25 100% 56%;
-    --amazon-blue: 210 100% 50%;
+    --amazon-blue: 210 100% 45%;
     --amazon-dark-blue: 210 100% 20%;
     --discount-red: 0 84% 60%;
     --rating-gold: 43 96% 56%;
@@ -114,15 +114,15 @@
     --popover: 0 0% 13%;
     --popover-foreground: 0 0% 95%;
 
-    /* Amazon orange (same in dark) */
-    --primary: 25 100% 56%;
-    --primary-foreground: 0 0% 9%;
-    --primary-hover: 25 100% 50%;
+    /* Amazon blue (darker in dark mode, slightly darker) */
+    --primary: 210 100% 35%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 210 100% 30%;
 
-    /* Amazon blue (darker in dark mode) */
-    --secondary: 210 100% 40%;
-    --secondary-foreground: 0 0% 100%;
-    --secondary-hover: 210 100% 35%;
+    /* Amazon orange (now secondary) */
+    --secondary: 25 100% 56%;
+    --secondary-foreground: 0 0% 9%;
+    --secondary-hover: 25 100% 50%;
 
     /* Muted colors */
     --muted: 0 0% 15%;
@@ -147,11 +147,10 @@
     /* Border and input */
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 25 100% 56%;
+    --ring: 210 100% 35%;
 
     /* Ecommerce specific colors (same as light) */
-    --amazon-orange: 25 100% 56%;
-    --amazon-blue: 210 100% 40%;
+    --amazon-blue: 210 100% 35%;
     --amazon-dark-blue: 210 100% 30%;
     --discount-red: 0 84% 60%;
     --rating-gold: 43 96% 56%;

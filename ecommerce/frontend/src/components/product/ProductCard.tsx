@@ -161,7 +161,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
               >
                 <Heart
                   className={cn(
-                    'w-4 h-4',
+                    'w-4 h-4 text-black',
                     isWishlisted && 'fill-red-500 text-red-500'
                   )}
                 />
@@ -176,7 +176,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className }) 
                   handleProductClick(e);
                 }}
               >
-                <Eye className="w-4 h-4" />
+                <Eye className="w-4 h-4 text-black" />
               </Button>
             </div>
           </div>

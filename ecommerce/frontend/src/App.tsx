@@ -18,8 +18,7 @@ import Wishlist from "./pages/Wishlist";
 import Profile from "./pages/Profile";
 import Debug from "./pages/Debug";
 import LeaderboardPage from "./pages/LeaderboardPage";
-
-
+import ScrollToTop from '@/components/ScrollToTop';
 
 const queryClient = new QueryClient();
 
@@ -34,6 +33,7 @@ const App = () => (
             <BrowserRouter>
               <div className="min-h-screen bg-background">
                 <Header />
+                <ScrollToTop />
                 <main>
                   <Routes>
                     <Route path="/" element={<Home />} />
