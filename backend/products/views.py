@@ -287,7 +287,7 @@ def search_products_xss(request):
     if '<script>' in query.lower() or 'javascript:' in query.lower() or 'alert(' in query.lower():
         return Response({
             'bug_found': 'XSS_SEARCH',
-            'message': '🎉 Bug Found: Cross-Site Scripting (XSS)!',
+            'message': 'Bug Found: Cross-Site Scripting (XSS)!',
             'description': 'XSS payload detected in search query',
             'points': 85,
             'payload': query
@@ -310,7 +310,7 @@ def download_file(request):
     if '../' in file_path or file_path.startswith('/') or 'etc/passwd' in file_path:
         return Response({
             'bug_found': 'PATH_TRAVERSAL',
-            'message': '🎉 Bug Found: Path Traversal!',
+            'message': 'Bug Found: Path Traversal!',
             'description': 'Directory traversal vulnerability detected',
             'points': 90,
             'attempted_path': file_path
@@ -344,7 +344,7 @@ def rate_limit_test(request):
     if request_counts[client_ip]['count'] > 100:
         return Response({
             'bug_found': 'RATE_LIMIT_BYPASS',
-            'message': '🎉 Bug Found: Rate Limiting Bypass!',
+            'message': 'Bug Found: Rate Limiting Bypass!',
             'description': 'No rate limiting implemented',
             'points': 70,
             'requests_count': request_counts[client_ip]['count']

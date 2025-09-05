@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,8 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login, state, clearError } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const nextUrl = searchParams.get('next');
 
   // Clear errors when component mounts
   useEffect(() => {
@@ -23,29 +25,63 @@ const Login: React.FC = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (state.isAuthenticated) {
-      navigate('/');
-    }
-  }, [state.isAuthenticated, navigate]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const success = await login(email, password);
-      if (success) {
+      if (nextUrl) {
+        // Handle potential open redirect
+        window.location.href = nextUrl;
+      } else {
         navigate('/');
       }
-    } catch (error) {
-      console.error('Login failed:', error);
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [state.isAuthenticated, navigate, nextUrl]);
+
+  // Update the handleSubmit function
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  try {
+    const nextUrl = searchParams.get('next');
+    
+    // Check for Open Redirect vulnerability BEFORE making login request
+    if (nextUrl && (nextUrl.startsWith('http://') || nextUrl.startsWith('https://'))) {
+      const whitelisted = ['localhost', '127.0.0.1'];
+      const isWhitelisted = whitelisted.some(domain => nextUrl.includes(domain));
+      
+      if (!isWhitelisted && nextUrl.includes('bb_open_redirect=1')) {
+        // Open Redirect vulnerability detected!
+        const bugData = {
+          bug_found: 'OPEN_REDIRECT',
+          message: 'Open Redirect detected!',
+          description: `Vulnerable redirect to external URL: ${nextUrl.substring(0, 50)}...`,
+          points: 90,
+          redirect_to: nextUrl,
+          vulnerability_type: 'Open Redirect',
+          severity: 'Medium'
+        };
+        
+        // Show the bug notification
+        if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+          (window as any).checkAndShowBugNotification(bugData);
+        }
+        
+        // Simulate the redirect after showing notification
+        setTimeout(() => {
+          console.log(`🔄 Would redirect to: ${nextUrl}`);
+          console.log('⚠️ This demonstrates the open redirect vulnerability!');
+          // In a real attack, this would redirect: window.location.href = nextUrl;
+        }, 2000);
+        
+        return; // Don't proceed with actual login
+      }
+    }
+    
+    // Continue with normal login if no vulnerability detected
+    await login(email, password, nextUrl);
+    navigate(nextUrl || '/');
+  } catch (error) {
+    console.error('Login failed:', error);
+  }
+};
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);

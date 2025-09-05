@@ -139,14 +139,57 @@ const ProductDetail: React.FC = () => {
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : product.discount;
 
-  const handleAddToCart = (e?: React.MouseEvent) => {
-    for (let i = 0; i < quantity; i++) {
-      addItem(product, 1, i === 0 ? e?.nativeEvent : undefined); // Only pass click event for first item to detect manipulation
+  const handleAddToCart = async (e?: React.MouseEvent) => {
+    try {
+      // Call API directly to detect business logic bypass
+      const response = await api.cart.add({
+        product_id: product.id,
+        quantity: quantity
+      });
+      
+      const data = await response.json();
+      
+      // Check for business logic bypass bug
+      if (data.bug_found === 'BUSINESS_LOGIC_BYPASS') {
+        // Show bug notification
+        if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+          (window as any).checkAndShowBugNotification(data);
+        }
+        
+        toast({
+          title: "Business Logic Bypass Detected!",
+          description: data.message,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (response.ok) {
+        // Normal success - use context for UI updates
+        for (let i = 0; i < Math.abs(quantity); i++) {
+          addItem(product, 1, i === 0 ? e?.nativeEvent : undefined);
+        }
+        
+        toast({
+          title: "Added to cart",
+          description: `${quantity} x ${product.name} added to your cart.`,
+        });
+      } else {
+        // Handle other errors
+        toast({
+          title: "Error",
+          description: data.error || "Failed to add item to cart",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart",
+        variant: "destructive"
+      });
     }
-    toast({
-      title: "Added to cart",
-      description: `${quantity} x ${product.name} added to your cart.`,
-    });
   };
 
   const handleWishlist = () => {
@@ -320,7 +363,7 @@ const ProductDetail: React.FC = () => {
                       if (newQuantity > Number.MAX_SAFE_INTEGER || newQuantity > 999999999) {
                         const bugData = {
                           bug_found: 'INTEGER_OVERFLOW',
-                          message: '🎉 Bug Found: Integer Overflow in Quantity!',
+                          message: 'Bug Found: Integer Overflow in Quantity!',
                           description: 'Quantity value exceeded safe integer limits',
                           points: 75
                         };
@@ -338,6 +381,21 @@ const ProductDetail: React.FC = () => {
                     +
                   </button>
                 </div>
+                
+                {/* 🚨 Hidden input for DevTools manipulation - Business Logic Bypass */}
+                <input
+                  type="number"
+                  name="quantity"
+                  value={quantity}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value) || 1;
+                    setQuantity(value);
+                  }}
+                  min="1"
+                  className="sr-only"
+                  style={{ position: 'absolute', left: '-9999px', opacity: 0 }}
+                  data-testid="quantity-input"
+                />
               </div>
 
               <div className="flex gap-4">

@@ -33,6 +33,9 @@ urlpatterns = [
     
     # Admin endpoints
     path('admin/import/', views.import_products_xml, name='import-xml'),  # 🚨 BUG 18: XXE
+    path('admin/panel/', views.admin_panel, name='admin-panel'),  # 🚨 BUG 20: IDOR Admin Panel
+    path('admin/users/', views.admin_users, name='admin-users'),  # 🚨 BUG 20: IDOR Admin Users
+    path('admin/settings/', views.admin_settings, name='admin-settings'),  # 🚨 BUG 20: IDOR Admin Settings
     
     # Analytics endpoints
     path('analytics/store-search/', views.store_search_term, name='store-search'),  # 🚨 BUG 19: Second-order SQL

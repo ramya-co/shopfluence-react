@@ -8,12 +8,35 @@ import { categories, heroSlides, deals } from '@/data/sampleData';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
 
+// Timer Bug tracking keys
+const NEGATIVE_TIMER_BUG_KEY = 'negative_timer_bug_discovered';
+const INCREMENTING_TIMER_BUG_KEY = 'incrementing_timer_bug_discovered';
+
+// Helper function to get user-specific storage key  
+const getUserSpecificTimerKey = (baseKey: string): string => {
+  const accessToken = localStorage.getItem('access_token');
+  if (accessToken) {
+    try {
+      const payload = JSON.parse(atob(accessToken.split('.')[1]));
+      const userId = payload.user_id || payload.sub || 'anonymous';
+      return `${baseKey}_${userId}`;
+    } catch (e) {
+      // Token decode failed, use fallback
+    }
+  }
+  return `${baseKey}_anonymous`;
+};
+
 const Home: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [timeLeft, setTimeLeft] = useState<{ [key: string]: number }>({});
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [newArrivals, setNewArrivals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Enhanced Today's Deals state
+  const [dealsTimers, setDealsTimers] = useState<{ [key: string]: number }>({});
+  const [incrementingTimer, setIncrementingTimer] = useState(0);
 
   // Load products from API
   useEffect(() => {
@@ -69,7 +92,47 @@ const Home: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Countdown timer for deals
+  // Enhanced Today's Deals with bug timers
+  useEffect(() => {
+    // Initialize timers for enhanced deals
+    const now = Date.now();
+    const initialTimers: { [key: string]: number } = {
+      'deal-1': now + (24 * 60 * 60 * 1000), // 24 hours
+      'deal-2': now + (12 * 60 * 60 * 1000), // 12 hours  
+      'deal-3': now + (6 * 60 * 60 * 1000),  // 6 hours
+      'deal-4': now + (2 * 60 + 2) * 1000,   // 🚨 BUG: 2 min 2 sec for testing negative timer
+      'deal-5': now + (18 * 60 * 60 * 1000), // 18 hours
+      'deal-6': now + (8 * 60 * 60 * 1000),  // 8 hours
+      'deal-7': now + (4 * 60 * 60 * 1000),  // 4 hours
+      'deal-8': now + (10 * 60 * 60 * 1000), // 10 hours
+    };
+    setDealsTimers(initialTimers);
+
+    const timer = setInterval(() => {
+      const currentTime = Date.now();
+      
+      setDealsTimers(prev => {
+        const updated: { [key: string]: number } = {};
+        Object.keys(prev).forEach(key => {
+          if (key === 'deal-4') {
+            // Negative timer bug - continues past 0
+            updated[key] = prev[key] - 1000;
+          } else {
+            // Normal countdown 
+            updated[key] = Math.max(0, prev[key] - 1000);
+          }
+        });
+        return updated;
+      });
+
+      // Incrementing timer bug for deal-incremental
+      setIncrementingTimer(prev => prev + 1000);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Countdown timer for original deals (keeping existing functionality)
   useEffect(() => {
     const timer = setInterval(() => {
       const newTimeLeft: { [key: string]: number } = {};
@@ -86,10 +149,65 @@ const Home: React.FC = () => {
   }, []);
 
   const formatTimeLeft = (milliseconds: number) => {
-    const hours = Math.floor(milliseconds / (1000 * 60 * 60));
-    const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((milliseconds % (1000 * 60)) / 1000);
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    const hours = Math.floor(Math.abs(milliseconds) / (1000 * 60 * 60));
+    const minutes = Math.floor((Math.abs(milliseconds) % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((Math.abs(milliseconds) % (1000 * 60)) / 1000);
+    const sign = milliseconds < 0 ? '-' : '';
+    return `${sign}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  // Handle negative timer bug detection
+  const handleNegativeTimerBug = async () => {
+    const userBugKey = getUserSpecificTimerKey(NEGATIVE_TIMER_BUG_KEY);
+    const hasBugBeenDiscovered = localStorage.getItem(userBugKey) === 'true';
+    
+    if (!hasBugBeenDiscovered) {
+      localStorage.setItem(userBugKey, 'true');
+      
+      const bugData = {
+        bug_found: 'NEGATIVE_TIMER_BUG',
+        message: '🎉 Business Logic Bug – Negative Timer Detected!',
+        description: 'Timer continued running into negative values instead of stopping at zero',
+        points: 70,
+        vulnerability_type: 'Business Logic Bug',
+        severity: 'Medium',
+        timer_value: dealsTimers['deal-4']
+      };
+
+      if (typeof window !== 'undefined') {
+        import('@/lib/notifications').then(notifications => {
+          notifications.showBugNotification(bugData);
+          notifications.notifyLeaderboard(bugData);
+        }).catch(console.error);
+      }
+    }
+  };
+
+  // Handle incrementing timer bug detection
+  const handleIncrementingTimerBug = async () => {
+    const userBugKey = getUserSpecificTimerKey(INCREMENTING_TIMER_BUG_KEY);
+    const hasBugBeenDiscovered = localStorage.getItem(userBugKey) === 'true';
+    
+    if (!hasBugBeenDiscovered) {
+      localStorage.setItem(userBugKey, 'true');
+      
+      const bugData = {
+        bug_found: 'INCREMENTING_TIMER_BUG',
+        message: '🎉 Business Logic Bug – Timer Increasing Instead of Decreasing!',
+        description: 'Timer is counting up instead of counting down to zero',
+        points: 70,
+        vulnerability_type: 'Business Logic Bug',
+        severity: 'Medium',
+        timer_value: incrementingTimer
+      };
+
+      if (typeof window !== 'undefined') {
+        import('@/lib/notifications').then(notifications => {
+          notifications.showBugNotification(bugData);
+          notifications.notifyLeaderboard(bugData);
+        }).catch(console.error);
+      }
+    }
   };
 
   const nextSlide = () => {
@@ -99,6 +217,78 @@ const Home: React.FC = () => {
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
   };
+
+  // Enhanced Today's Deals data (8 cards)
+  const enhancedDeals = [
+    {
+      id: 'deal-1',
+      title: 'iPhone 15 Pro',
+      subtitle: 'Latest Apple smartphone with Pro cameras',
+      image: 'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=400&h=300&fit=crop',
+      discount: 'Up to 15% OFF',
+      category: 'Electronics'
+    },
+    {
+      id: 'deal-2', 
+      title: 'Nike Air Max',
+      subtitle: 'Premium running shoes for athletes',
+      image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop',
+      discount: 'Save Big',
+      category: 'Fashion'
+    },
+    {
+      id: 'deal-3',
+      title: 'MacBook Pro',
+      subtitle: 'M3 chip with incredible performance',
+      image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&h=300&fit=crop',
+      discount: 'Up to 10% OFF',
+      category: 'Electronics'
+    },
+    {
+      id: 'deal-4', // 🚨 NEGATIVE TIMER BUG CARD
+      title: 'Testing Timer',
+      subtitle: 'Special deal for testing purposes',
+      image: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop',
+      discount: 'Test Deal',
+      category: 'Testing',
+      isBugCard: true,
+      bugType: 'negative'
+    },
+    {
+      id: 'deal-5',
+      title: 'Samsung 4K TV',
+      subtitle: 'Crystal clear display technology',
+      image: 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=400&h=300&fit=crop',
+      discount: 'Up to 25% OFF',
+      category: 'Electronics'
+    },
+    {
+      id: 'deal-6',
+      title: 'Canon DSLR',
+      subtitle: 'Professional photography camera',
+      image: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400&h=300&fit=crop',
+      discount: 'Up to 20% OFF',
+      category: 'Electronics'
+    },
+    {
+      id: 'deal-7',
+      title: 'Designer Sofa',
+      subtitle: 'Luxury furniture for your home',
+      image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop',
+      discount: 'Up to 30% OFF',
+      category: 'Home'
+    },
+    {
+      id: 'deal-incremental', // 🚨 INCREMENTING TIMER BUG CARD
+      title: 'Gaming Laptop',
+      subtitle: 'High-performance gaming machine',
+      image: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=400&h=300&fit=crop',
+      discount: 'Special Offer',
+      category: 'Electronics',
+      isBugCard: true,
+      bugType: 'incrementing'
+    }
+  ];
 
   return (
     <div className="min-h-screen">
@@ -202,7 +392,7 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Deals Section */}
+      {/* Enhanced Today's Deals Section - 8 Cards with Timer Bugs */}
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -211,48 +401,87 @@ const Home: React.FC = () => {
               Limited time offers you don't want to miss
             </p>
           </div>
-          <div className="grid md:grid-cols-2 gap-8">
-            {deals.map((deal) => (
-              <div
-                key={deal.id}
-                className="relative bg-card rounded-lg overflow-hidden border border-border group hover:shadow-hover transition-shadow"
-              >
-                <div className="md:flex">
-                  <div className="md:w-1/2">
+          
+          {/* 8 Product Cards Grid - 4 per row × 2 rows */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {enhancedDeals.map((deal) => {
+              const getTimerValue = () => {
+                if (deal.id === 'deal-incremental') {
+                  return incrementingTimer;
+                } else if (deal.id === 'deal-4') {
+                  return dealsTimers[deal.id] || 0;
+                } else {
+                  return Math.max(0, dealsTimers[deal.id] || 0);
+                }
+              };
+
+              const timerValue = getTimerValue();
+              const isNegative = deal.id === 'deal-4' && timerValue < 0;
+
+              return (
+                <div
+                  key={deal.id}
+                  className="bg-card rounded-lg overflow-hidden border border-border group hover:shadow-hover transition-shadow"
+                >
+                  <div className="relative">
                     <img
                       src={deal.image}
                       alt={deal.title}
-                      className="w-full h-48 md:h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                     />
+                    <Badge className="absolute top-3 left-3 bg-discount text-white">
+                      {deal.discount}
+                    </Badge>
                   </div>
-                  <div className="md:w-1/2 p-6 flex flex-col justify-center">
+                  
+                  <div className="p-4">
+                    <h3 className="font-bold text-lg mb-1">{deal.title}</h3>
+                    <p className="text-muted-foreground text-sm mb-3">{deal.subtitle}</p>
+                    
+                    {/* Timer Display */}
                     <div className="mb-4">
-                      <Badge className="bg-discount text-white mb-2">
-                        {deal.discount}
-                      </Badge>
-                      <h3 className="text-2xl font-bold mb-2">{deal.title}</h3>
-                      <p className="text-muted-foreground">{deal.subtitle}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                        <Clock className="w-3 h-3" />
+                        <span>
+                          {deal.id === 'deal-incremental' 
+                            ? 'Time Running:' 
+                            : isNegative 
+                              ? 'Time Exceeded:' 
+                              : 'Ends in:'
+                          }
+                        </span>
+                      </div>
+                      <div className={`text-lg font-mono font-bold ${
+                        isNegative 
+                          ? 'text-red-600' 
+                          : deal.id === 'deal-incremental' 
+                            ? 'text-blue-600' 
+                            : 'text-discount'
+                      }`}>
+                        {formatTimeLeft(timerValue)}
+                      </div>
                     </div>
                     
-                    {timeLeft[deal.id] > 0 && (
-                      <div className="mb-4">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                          <Clock className="w-4 h-4" />
-                          <span>Ends in:</span>
-                        </div>
-                        <div className="text-2xl font-mono font-bold text-discount">
-                          {formatTimeLeft(timeLeft[deal.id])}
-                        </div>
-                      </div>
-                    )}
-                    
-                    <Button className="bg-primary hover:bg-primary-hover">
+                    {/* Shop Now Button */}
+                    <Button 
+                      className="w-full bg-primary hover:bg-primary-hover"
+                      onClick={() => {
+                        if (deal.isBugCard) {
+                          if (deal.bugType === 'negative' && isNegative) {
+                            handleNegativeTimerBug();
+                          } else if (deal.bugType === 'incrementing') {
+                            handleIncrementingTimerBug();
+                          }
+                        }
+                        // Normal shop functionality would go here
+                      }}
+                    >
                       Shop Now
                     </Button>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

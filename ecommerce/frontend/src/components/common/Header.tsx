@@ -38,8 +38,26 @@ const Header: React.FC = () => {
       <div className="bg-amazon-dark-blue text-white py-2">
         <div className="container mx-auto px-4">
           <p className="text-center text-sm">
-            Free shipping on orders over $35 | Summer Sale: Up to 50% off
+            <span className="font-medium">Offer 1:</span> Free shipping on orders over $35 | <span className="font-medium">Summer Sale:</span> Up to 50% off
           </p>
+        </div>
+      </div>
+
+      {/* Coupon banners */}
+      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white py-2">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-3 text-sm">
+            <div className="flex flex-col sm:flex-row items-center gap-2">
+              <span className="font-medium">🎫 Coupon: Code: EXPIRED2025 | Valid until June 2025</span>
+            </div>
+            <span className="hidden sm:block text-white/70">•</span>
+            <div className="flex flex-col sm:flex-row items-center gap-2">
+              <span className="font-medium">Offer 2:</span> Spend $100, get $10 off
+            </div>
+          </div>
+          <div className="text-center mt-1">
+            <span className="font-medium text-sm">🎫 Coupon: Code: DISCOUNT10 | Valid until Dec 2025</span>
+          </div>
         </div>
       </div>
 

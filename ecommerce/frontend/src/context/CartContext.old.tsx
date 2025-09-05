@@ -128,7 +128,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (displayedPrice !== null && Math.abs(displayedPrice - product.price) > 0.01) {
         showBugNotification({
           bug_found: 'PRICE_MANIPULATION',
-          message: '🎉 Bug Found: Price Manipulation!',
+          message: 'Bug Found: Price Manipulation!',
           description: `Original price: $${product.price}, Manipulated price: $${displayedPrice}`,
           points: 85
         });
@@ -141,7 +141,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (Math.abs(manipulatedPrice - product.price) > 0.01) {
           showBugNotification({
             bug_found: 'PRICE_MANIPULATION',
-            message: '🎉 Bug Found: Price Manipulation!',
+            message: 'Bug Found: Price Manipulation!',
             description: `Original price: $${product.price}, Manipulated price: $${manipulatedPrice}`,
             points: 85
           });
@@ -166,7 +166,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Show bug found notification using the notification utility
       const bugData = {
         bug_found: 'RACE_CONDITION',
-        message: '🎉 Bug Found: Race Condition in Cart!',
+        message: 'Bug Found: Race Condition in Cart!',
         description: 'Race condition detected - too many rapid cart additions',
         points: 80
       };

@@ -18,6 +18,7 @@ export const apiCall = async (
   
   const config: RequestInit = {
     ...options,
+    credentials: 'include', // Include cookies in requests
     headers: {
       ...defaultHeaders,
       ...options.headers,

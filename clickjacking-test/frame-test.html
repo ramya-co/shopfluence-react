@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clickjacking Test - Attacker Site</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        
+        .malicious-header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .warning {
+            background: #ffeaa7;
+            border: 2px solid #fdcb6e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        iframe {
+            width: 1200px;
+            height: 800px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .demo-info {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .test-steps {
+            background: #74b9ff;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .test-steps ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .malicious-content {
+            position: absolute;
+            top: 200px;
+            right: 50px;
+            background: rgba(255, 0, 0, 0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 1000;
+            max-width: 300px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="malicious-header">
+        <h1>🎯 Malicious Attacker Site - Clickjacking Test</h1>
+        <p>This demonstrates how an attacker could embed your profile page!</p>
+    </div>
+    
+    <div class="warning">
+        <strong>⚠️ Security Test:</strong> This page demonstrates a clickjacking vulnerability. 
+        The profile page below should detect it's being framed and trigger the bug notification.
+    </div>
+    
+    <div class="test-steps">
+        <h3>📋 Test Steps:</h3>
+        <ol>
+            <li>Make sure you're logged into the ecommerce site</li>
+            <li>The iframe below loads: <code>http://localhost:5173/account/profile?bb_iframe=1</code></li>
+            <li>If the profile page renders, the clickjacking vulnerability exists</li>
+            <li>Check browser console for bug detection messages</li>
+            <li>Notification should appear: "🎉 Clickjacking exposure detected!"</li>
+        </ol>
+    </div>
+    
+    <div class="demo-info">
+        <h3>🔍 What's Happening:</h3>
+        <ul>
+            <li><strong>Target URL:</strong> <code>http://localhost:5173/account/profile?bb_iframe=1</code></li>
+            <li><strong>Vulnerability:</strong> Missing X-Frame-Options or CSP frame-ancestors</li>
+            <li><strong>Detection:</strong> JavaScript checks <code>window.top !== window.self</code></li>
+            <li><strong>Points:</strong> 100 pts for discovering this vulnerability</li>
+        </ul>
+    </div>
+    
+    <!-- The vulnerable iframe that demonstrates clickjacking -->
+    <div style="position: relative;">
+        <iframe src="http://localhost:5173/account/profile?bb_iframe=1" 
+                title="Embedded Profile Page (Vulnerable to Clickjacking)">
+        </iframe>
+        
+        <!-- Malicious overlay content that an attacker might use -->
+        <div class="malicious-content">
+            <h4>💀 Attacker's Overlay</h4>
+            <p>In a real attack, this could be:</p>
+            <ul>
+                <li>Fake login form</li>
+                <li>Malicious buttons</li>
+                <li>Social engineering content</li>
+            </ul>
+            <p><small>The user thinks they're on the real site but they're on our malicious page!</small></p>
+        </div>
+    </div>
+    
+    <div style="margin-top: 30px; padding: 20px; background: #ddd; border-radius: 8px;">
+        <h3>🛡️ How to Fix:</h3>
+        <p>To prevent clickjacking, the application should implement:</p>
+        <ul>
+            <li><code>X-Frame-Options: DENY</code> or <code>X-Frame-Options: SAMEORIGIN</code></li>
+            <li><code>Content-Security-Policy: frame-ancestors 'self'</code></li>
+            <li>JavaScript frame-busting code (though less reliable)</li>
+        </ul>
+    </div>
+    
+    <script>
+        // Log information about this malicious page
+        console.log('🎯 Malicious attacker page loaded');
+        console.log('📍 This page is trying to frame: http://localhost:5173/account/profile?bb_iframe=1');
+        console.log('🔍 Watch for clickjacking detection in the iframe...');
+        
+        // Listen for messages from the iframe (if any)
+        window.addEventListener('message', function(event) {
+            if (event.origin === 'http://localhost:5173') {
+                console.log('📨 Message from target site:', event.data);
+            }
+        });
+        
+        // Simulate what an attacker might do
+        setTimeout(() => {
+            console.log('🎭 Attacker: User is now viewing our malicious content overlaid on their real profile page!');
+        }, 2000);
+    </script>
+</body>
+</html>

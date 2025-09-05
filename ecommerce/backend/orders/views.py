@@ -27,6 +27,48 @@ class AddToCartView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
+        # 🚨 BUG: Business Logic Bypass - Check for negative quantity BEFORE validation
+        raw_quantity = request.data.get('quantity')
+        
+        # Check if quantity is negative (vulnerability detection)
+        if raw_quantity is not None:
+            try:
+                quantity_value = int(raw_quantity)
+                if quantity_value < 0:
+                    # Business Logic Bypass detected!
+                    try:
+                        import requests
+                        from django.utils import timezone
+                        
+                        # Record bug in leaderboard
+                        leaderboard_data = {
+                            'bug_type': 'BUSINESS_LOGIC_BYPASS',
+                            'user_email': 'participant@example.com',
+                            'vulnerability_type': 'Business Logic Bypass',
+                            'severity': 'Medium',
+                            'description': f'Negative quantity purchase attempt detected: {quantity_value}',
+                            'points': 85,
+                            'timestamp': timezone.now().isoformat()
+                        }
+                        
+                        # Send to leaderboard service
+                        response = requests.post('http://localhost:8002/api/record-bug/', json=leaderboard_data, timeout=5)
+                    except Exception as e:
+                        print(f"Failed to record bug in leaderboard: {e}")
+                    
+                    return Response({
+                        'bug_found': 'BUSINESS_LOGIC_BYPASS',
+                        'message': '🎉 Business logic bypass - negative quantity detected!',
+                        'description': f'Negative quantity purchase attempt: {quantity_value} items',
+                        'points': 85,
+                        'vulnerability_type': 'Business Logic Bypass',
+                        'severity': 'Medium',
+                        'quantity': quantity_value
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            except (ValueError, TypeError):
+                pass  # Continue with normal validation
+        
+        # Continue with normal validation for non-negative quantities
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,72 @@ const Profile: React.FC = () => {
     username: authState.user?.username || '',
     phone_number: authState.user?.phone_number || '',
   });
+
+  // 🚨 BUG: Clickjacking detection when bb_iframe=1 is present
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const bbIframe = urlParams.get('bb_iframe');
+    
+    if (bbIframe === '1') {
+      // Inject clickjacking detection script
+      const script = document.createElement('script');
+      script.innerHTML = `
+        // Check if page is loaded in an iframe
+        if (window.top !== window.self) {
+          // Page is in an iframe - this is the vulnerability!
+          fetch('/api/bugs/record/?bug=clickjack&mark=1', { 
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              bug: 'clickjack',
+              mark: '1'
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.bug_found === 'CLICKJACKING') {
+              console.log('🎉 Clickjacking vulnerability detected!', data);
+              
+              // Show notification
+              if (window.showNotification) {
+                window.showNotification({
+                  type: 'bug_found',
+                  message: data.message,
+                  description: data.description,
+                  points: data.points,
+                  bugType: 'CLICKJACKING'
+                });
+              }
+              
+              // Also show with the existing notification system
+              if (window.showBugNotification) {
+                window.showBugNotification({
+                  bug_found: data.bug_found,
+                  message: data.message,
+                  description: data.description,
+                  points: data.points
+                });
+              }
+            }
+          })
+          .catch(error => {
+            console.log('Failed to record clickjacking bug:', error);
+          });
+        }
+      `;
+      document.head.appendChild(script);
+      
+      // Clean up the script on component unmount
+      return () => {
+        if (document.head.contains(script)) {
+          document.head.removeChild(script);
+        }
+      };
+    }
+  }, []);
 
   if (!authState.isAuthenticated || !authState.user) {
     return (

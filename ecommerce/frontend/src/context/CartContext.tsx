@@ -7,6 +7,26 @@ import { showBugNotification } from '../lib/notifications';
 let addToCartClickCount = 0;
 let lastClickTime = 0;
 
+// 🚨 BUG 14: First-time Cart Quantity Mismatch
+const FIRST_ADD_CART_KEY = 'first_add_cart_bug_triggered';
+const CART_BUG_DISCOVERED_KEY = 'cart_quantity_bug_discovered';
+
+// Helper function to get user-specific storage key
+const getUserSpecificKey = (baseKey: string): string => {
+  const accessToken = localStorage.getItem('access_token');
+  if (accessToken) {
+    try {
+      const payload = JSON.parse(atob(accessToken.split('.')[1]));
+      const userId = payload.user_id || payload.sub || 'anonymous';
+      return `${baseKey}_${userId}`;
+    } catch (e) {
+      // Token decode failed, use fallback
+    }
+  }
+  // Fallback for anonymous or invalid token
+  return `${baseKey}_anonymous`;
+};
+
 export interface CartItem {
   id: number;
   product: {
@@ -40,6 +60,9 @@ interface CartContextType {
   clearCart: () => Promise<void>;
   refreshCart: () => Promise<void>;
   clearError: () => void;
+  // 🚨 BUG 14: Utility functions for cart quantity bug
+  resetCartQuantityBug: () => void;
+  isCartQuantityBugActive: () => boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -143,7 +166,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // Price manipulation detected
             const bugData = {
               bug_found: 'PRICE_MANIPULATION',
-              message: '🎉 Bug Found: Price Manipulation!',
+              message: 'Bug Found: Price Manipulation!',
               description: `Original price: $${product.price}, Manipulated price: $${priceValue}`,
               points: 85
             };
@@ -185,7 +208,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
               if (!isNaN(priceValue) && Math.abs(priceValue - product.price) > 0.01) {
                 const bugData = {
                   bug_found: 'PRICE_MANIPULATION',
-                  message: '🎉 Bug Found: Price Manipulation!',
+                  message: 'Bug Found: Price Manipulation!',
                   description: `Original price: $${product.price}, Manipulated display price: $${priceValue}`,
                   points: 85
                 };
@@ -235,7 +258,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Show bug found notification using the notification utility
       const bugData = {
         bug_found: 'RACE_CONDITION',
-        message: '🎉 Bug Found: Race Condition in Cart!',
+        message: 'Bug Found: Race Condition in Cart!',
         description: 'Race condition detected - too many rapid cart additions',
         points: 80
       };
@@ -280,10 +303,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     
+    // 🚨 BUG 14: First-time Cart Quantity Mismatch Logic
+    const userFirstAddKey = getUserSpecificKey(FIRST_ADD_CART_KEY);
+    const userBugDiscoveredKey = getUserSpecificKey(CART_BUG_DISCOVERED_KEY);
+    
+    const hasTriggeredFirstAdd = localStorage.getItem(userFirstAddKey) === 'true';
+    const hasBugBeenDiscovered = localStorage.getItem(userBugDiscoveredKey) === 'true';
+    
+    let actualQuantity = quantity;
+    
+    // Only trigger the bug if it's the user's first add and bug hasn't been discovered yet
+    if (!hasTriggeredFirstAdd && !hasBugBeenDiscovered) {
+      actualQuantity = quantity + 1; // Add one extra (the bug)
+      localStorage.setItem(userFirstAddKey, 'true');
+    }
+    
     try {
       const response = await api.cart.add({
         product_id: product.id,
-        quantity: quantity,
+        quantity: actualQuantity, // Use the potentially modified quantity
       });
 
       if (response.ok) {
@@ -336,6 +374,45 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const token = localStorage.getItem('access_token');
     if (!token) return;
+
+    // 🚨 BUG 14: Detect Cart Quantity Mismatch Bug Discovery
+    const userFirstAddKey = getUserSpecificKey(FIRST_ADD_CART_KEY);
+    const userBugDiscoveredKey = getUserSpecificKey(CART_BUG_DISCOVERED_KEY);
+    
+    const hasTriggeredFirstAdd = localStorage.getItem(userFirstAddKey) === 'true';
+    const hasBugBeenDiscovered = localStorage.getItem(userBugDiscoveredKey) === 'true';
+    
+    // Find the current item to check if quantity is being decreased
+    const currentItem = state.items.find(item => item.id === itemId);
+    const isDecreasingQuantity = currentItem && quantity < currentItem.quantity;
+    
+    // Trigger bug discovery if: user had first-add bug AND is decreasing quantity AND bug not yet discovered
+    if (hasTriggeredFirstAdd && !hasBugBeenDiscovered && isDecreasingQuantity) {
+      // Mark bug as discovered
+      localStorage.setItem(userBugDiscoveredKey, 'true');
+      
+      // Trigger bug notification
+      const bugData = {
+        bug_found: 'CART_QUANTITY_MISMATCH',
+        message: '🎉 Business Logic Flaw – Cart Quantity Mismatch Detected!',
+        description: 'Cart quantity manipulation discovered when adjusting item quantity',
+        points: 75,
+        vulnerability_type: 'Business Logic Flaw',
+        severity: 'Medium',
+        item_id: itemId,
+        original_quantity: currentItem.quantity,
+        new_quantity: quantity
+      };
+
+      // Show notification and update leaderboard
+      if (typeof window !== 'undefined') {
+        // Use async import to avoid circular dependencies
+        import('@/lib/notifications').then(notifications => {
+          notifications.showBugNotification(bugData);
+          notifications.notifyLeaderboard(bugData);
+        }).catch(console.error);
+      }
+    }
 
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     
@@ -391,6 +468,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setState(prev => ({ ...prev, error: null }));
   };
 
+  // 🚨 BUG 14: Utility functions for cart quantity bug management
+  const resetCartQuantityBug = () => {
+    const userFirstAddKey = getUserSpecificKey(FIRST_ADD_CART_KEY);
+    const userBugDiscoveredKey = getUserSpecificKey(CART_BUG_DISCOVERED_KEY);
+    localStorage.removeItem(userFirstAddKey);
+    localStorage.removeItem(userBugDiscoveredKey);
+  };
+
+  const isCartQuantityBugActive = (): boolean => {
+    const userFirstAddKey = getUserSpecificKey(FIRST_ADD_CART_KEY);
+    const userBugDiscoveredKey = getUserSpecificKey(CART_BUG_DISCOVERED_KEY);
+    const hasTriggeredFirstAdd = localStorage.getItem(userFirstAddKey) === 'true';
+    const hasBugBeenDiscovered = localStorage.getItem(userBugDiscoveredKey) === 'true';
+    return hasTriggeredFirstAdd && !hasBugBeenDiscovered;
+  };
+
   const value = {
     state,
     addItem,
@@ -399,6 +492,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     clearCart,
     refreshCart,
     clearError,
+    resetCartQuantityBug,
+    isCartQuantityBugActive,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

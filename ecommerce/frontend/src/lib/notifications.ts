@@ -139,24 +139,30 @@ export const showLeaderboardNotification = (userData: any): void => {
   const notification = document.createElement('div');
   notification.style.cssText = `
     position: fixed; top: 80px; right: 20px; z-index: 10000;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    color: white; padding: 16px; border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    max-width: 280px; font-family: Arial, sans-serif;
+    background: hsl(0 0% 100%);
+    border: 1px solid hsl(210 100% 90%);
+    color: hsl(0 0% 9%); 
+    padding: 20px; 
+    border-radius: 12px;
+    box-shadow: 0 8px 32px -8px hsl(210 100% 50% / 0.15), 0 0 0 1px hsl(0 0% 0% / 0.05);
+    max-width: 300px; 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     animation: slideIn 0.3s ease-out;
     cursor: pointer;
     pointer-events: auto;
+    backdrop-filter: blur(8px);
+    border-left: 4px solid hsl(210 100% 50%);
   `;
   
   notification.innerHTML = `
     <div style="display: flex; align-items: center; margin-bottom: 8px;">
-      <span style="font-size: 16px; margin-right: 8px;">🏆</span>
-      <h4 style="margin: 0; font-size: 14px;">Leaderboard Updated!</h4>
+      <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: hsl(210 100% 50%); border-radius: 50%; font-size: 10px; color: white; font-weight: bold; margin-right: 8px;">↑</span>
+      <h4 style="margin: 0; font-size: 15px; font-weight: 600; color: hsl(0 0% 9%);">Leaderboard Updated!</h4>
     </div>
-    <p style="margin: 0 0 4px 0; font-size: 13px;">Current Rank: #${userData.rank}</p>
-    <p style="margin: 0 0 4px 0; font-size: 13px;">Total Score: ${userData.total_score} points</p>
-    <p style="margin: 0; font-size: 12px; opacity: 0.9;">Bugs Found: ${userData.bugs_found}</p>
-    <div style="position: absolute; top: 5px; right: 8px; font-size: 16px; cursor: pointer;" onclick="this.parentElement.remove()">×</div>
+    <p style="margin: 0 0 4px 0; font-size: 13px; font-weight: 600; color: hsl(210 100% 50%);">Current Rank: #${userData.rank}</p>
+    <p style="margin: 0 0 4px 0; font-size: 13px; color: hsl(0 0% 45%);">Total Score: ${userData.total_score} points</p>
+    <p style="margin: 0; font-size: 12px; color: hsl(0 0% 45%); background: hsl(0 0% 96%); padding: 4px 8px; border-radius: 6px; display: inline-block;">Bugs Found: ${userData.bugs_found}</p>
+    <button style="position: absolute; top: 8px; right: 8px; background: none; border: none; font-size: 16px; cursor: pointer; color: hsl(0 0% 45%); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onclick="this.parentElement.remove()" onmouseover="this.style.background='hsl(0 0% 89%)'" onmouseout="this.style.background='none'">×</button>
   `;
   
   notification.addEventListener('click', () => notification.remove());
@@ -189,25 +195,34 @@ export const showBugNotification = (bug: BugNotification): void => {
   
   const notification = document.createElement('div');
   notification.style.cssText = `
-    background: linear-gradient(135deg, #4CAF50, #45a049);
-    color: white; 
+    background: hsl(0 0% 100%);
+    border: 1px solid hsl(0 0% 89%);
+    color: hsl(0 0% 9%); 
     padding: 20px; 
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    max-width: 300px; 
-    font-family: Arial, sans-serif;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px -8px hsl(0 0% 0% / 0.12), 0 0 0 1px hsl(0 0% 0% / 0.05);
+    max-width: 320px; 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     animation: slideIn 0.3s ease-out;
     cursor: pointer;
     pointer-events: auto;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    position: relative;
+    backdrop-filter: blur(8px);
+    border-left: 4px solid hsl(142 76% 36%);
   `;
   
   notification.innerHTML = `
-    <h3 style="margin: 0 0 10px 0; font-size: 16px;">🎉 ${bug.message}</h3>
-    <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 14px;">${bug.bug_found}</p>
-    <p style="margin: 0 0 8px 0; font-size: 13px; line-height: 1.4;">${bug.description}</p>
-    <small style="font-size: 12px; opacity: 0.9;">Points: ${bug.points}</small>
-    <div style="position: absolute; top: 5px; right: 8px; font-size: 18px; cursor: pointer;" onclick="this.parentElement.remove()">×</div>
+    <h3 style="margin: 0 0 8px 0; font-size: 15px; font-weight: 600; color: hsl(0 0% 9%); display: flex; align-items: center; gap: 8px;">
+      <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: hsl(142 76% 36%); border-radius: 50%; font-size: 10px; color: white; font-weight: bold;">!</span>
+      ${bug.message}
+    </h3>
+    <p style="margin: 0 0 6px 0; font-weight: 600; font-size: 14px; color: hsl(142 76% 36%);">${bug.bug_found}</p>
+    <p style="margin: 0 0 8px 0; font-size: 13px; line-height: 1.5; color: hsl(0 0% 45%);">${bug.description}</p>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <small style="font-size: 12px; color: hsl(0 0% 45%); background: hsl(0 0% 96%); padding: 4px 8px; border-radius: 6px; font-weight: 500;">+${bug.points} points</small>
+    </div>
+    <button style="position: absolute; top: 8px; right: 8px; background: none; border: none; font-size: 16px; cursor: pointer; color: hsl(0 0% 45%); width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" onclick="this.parentElement.remove()" onmouseover="this.style.background='hsl(0 0% 89%)'" onmouseout="this.style.background='none'">×</button>
   `;
   
   // Add click to close
@@ -316,16 +331,105 @@ export const testLocalStorageManipulation = (): void => {
     const fakeToken = 'fake_manipulated_token_12345';
     localStorage.setItem('access_token', fakeToken);
     
-    console.log('Token manipulated, detection should trigger in ~2 seconds...');
+    console.log('✅ Token manipulated to:', fakeToken);
+    console.log('📝 Detection should trigger in ~2 seconds...');
     
     // Restore original token after a moment
     setTimeout(() => {
       localStorage.setItem('access_token', currentToken);
-      console.log('Token restored to original value');
+      console.log('🔄 Token restored to original value');
     }, 5000);
   } else {
     console.log('❌ No access token found. Please log in first to test manipulation detection.');
   }
+};
+
+// localStorage Manipulation Detection System
+let lastKnownValidToken: string | null = null;
+let tokenCheckInterval: NodeJS.Timeout | null = null;
+let manipulationDetected = false;
+
+const isValidJWT = (token: string): boolean => {
+  try {
+    // Basic JWT structure check (3 parts separated by dots)
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    
+    // Check if parts are base64 encoded
+    const payload = JSON.parse(atob(parts[1]));
+    
+    // Check if it has typical JWT fields
+    return payload && (payload.exp || payload.iat || payload.user_id);
+  } catch {
+    return false;
+  }
+};
+
+const detectTokenManipulation = (): void => {
+  const currentToken = localStorage.getItem('access_token');
+  
+  // Skip if no token present
+  if (!currentToken) {
+    lastKnownValidToken = null;
+    return;
+  }
+  
+  // First time seeing a token - record it if valid
+  if (!lastKnownValidToken && isValidJWT(currentToken)) {
+    lastKnownValidToken = currentToken;
+    console.log('🔐 Valid token detected and stored for monitoring');
+    return;
+  }
+  
+  // If we had a valid token but now it's different and invalid
+  if (lastKnownValidToken && 
+      currentToken !== lastKnownValidToken && 
+      !isValidJWT(currentToken) && 
+      !manipulationDetected) {
+    
+    console.log('🚨 localStorage token manipulation detected!');
+    manipulationDetected = true;
+    
+    // Create bug notification
+    const bugData = {
+      bug_found: 'LOCALSTORAGE_MANIPULATION',
+      message: '🎉 Local storage token manipulation detected!',
+      description: `Detected manipulation of access token in localStorage: ${currentToken}`,
+      points: 80,
+      vulnerability_type: 'Client-Side Security',
+      severity: 'Medium',
+      manipulated_token: currentToken,
+      original_token_prefix: lastKnownValidToken ? lastKnownValidToken.substring(0, 20) + '...' : 'unknown'
+    };
+    
+    // Show notification
+    showBugNotification(bugData);
+    
+    // Record in leaderboard
+    notifyLeaderboard(bugData);
+    
+    // Reset manipulation flag after some time
+    setTimeout(() => {
+      manipulationDetected = false;
+    }, 10000);
+  }
+};
+
+const initializeLocalStorageMonitoring = (): void => {
+  console.log('🔍 Initializing localStorage manipulation detection...');
+  
+  // Check for existing valid token
+  const currentToken = localStorage.getItem('access_token');
+  if (currentToken && isValidJWT(currentToken)) {
+    lastKnownValidToken = currentToken;
+    console.log('🔐 Found existing valid token for monitoring');
+  }
+  
+  // Start monitoring every 2 seconds
+  if (tokenCheckInterval) clearInterval(tokenCheckInterval);
+  tokenCheckInterval = setInterval(detectTokenManipulation, 2000);
+  
+  console.log('✅ localStorage monitoring active (checking every 2 seconds)');
 };
 
 // Global fetch interceptor to catch all API responses and show bug notifications
@@ -342,6 +446,19 @@ if (typeof window !== 'undefined') {
   (window as any).testBugEndpoint = testBugEndpoint;
   (window as any).testCORSConfiguration = testCORSConfiguration;
   (window as any).testLocalStorageManipulation = testLocalStorageManipulation;
+  
+  // Add a generic showNotification function for clickjacking and other bugs
+  (window as any).showNotification = (data: any) => {
+    if (data.type === 'bug_found' && data.bugType) {
+      const bugNotification = {
+        bug_found: data.bugType,
+        message: data.message || `${data.bugType} detected!`,
+        description: data.description || `${data.bugType} vulnerability found`,
+        points: data.points || 0
+      };
+      showBugNotification(bugNotification);
+    }
+  };
   
   window.fetch = async (...args) => {
     const response = await originalFetch(...args);
@@ -369,7 +486,7 @@ if (typeof window !== 'undefined') {
           // Dangerous CORS configuration detected
           const corsBugData = {
             bug_found: 'CORS_MISCONFIGURATION',
-            message: '🎉 Bug Found: CORS Misconfiguration!',
+            message: 'Bug Found: CORS Misconfiguration!',
             description: 'Access-Control-Allow-Origin: * allows any domain to make requests',
             points: 65
           };
@@ -393,7 +510,7 @@ if (typeof window !== 'undefined') {
         if (corsOrigin === '*') {
           const corsBugData = {
             bug_found: 'CORS_MISCONFIGURATION',
-            message: '🎉 Bug Found: CORS Misconfiguration!',
+            message: 'Bug Found: CORS Misconfiguration!',
             description: 'Access-Control-Allow-Origin: * allows any domain to make requests',
             points: 65
           };
@@ -432,7 +549,7 @@ export const testIntegerOverflow = (): void => {
     // Trigger the integer overflow detection
     const bugData = {
       bug_found: 'INTEGER_OVERFLOW',
-      message: '🎉 Bug Found: Integer Overflow in Quantity!',
+      message: 'Bug Found: Integer Overflow in Quantity!',
       description: 'Quantity value exceeded safe integer limits via DevTools simulation',
       points: 75
     };
@@ -446,61 +563,108 @@ export const testIntegerOverflow = (): void => {
   }
 };
 
-// Rate Limiting DevTools Script
+// 🚨 TEST FUNCTION: Login Rate Limiting Vulnerability
 export const testRateLimiting = async (): Promise<void> => {
-  console.log('🚀 Testing Rate Limiting - Sending 101 rapid requests...');
+  console.log('� Testing login rate limiting vulnerability...');
+  console.log('📧 Using test credentials - username: testuser@example.com, wrong password: wrongpassword123');
   
-  const endpoint = 'http://localhost:8000/api/products/rate-test/';
-  const token = localStorage.getItem('access_token');
+  let failedAttempts = 0;
+  const maxAttempts = 12; // Test more than 10 to ensure detection
+  const testEmail = 'testuser@example.com';
+  const wrongPassword = 'wrongpassword123';
   
-  if (!token) {
-    console.log('⚠️ Please log in first to get an access token');
-    return;
-  }
-
+  console.log(`🎯 Attempting ${maxAttempts} failed login attempts...`);
+  
   try {
-    // Send 101 rapid requests to trigger rate limiting
-    const promises = [];
-    for (let i = 1; i <= 101; i++) {
-      const promise = fetch(endpoint, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }).then(response => response.json()).then(data => {
-        if (i <= 5 || i % 20 === 0 || i > 95) {
-          console.log(`Request ${i}:`, data);
-        }
-        return data;
-      });
+    // Perform multiple failed login attempts
+    for (let i = 1; i <= maxAttempts; i++) {
+      console.log(`🔄 Attempt ${i}/${maxAttempts}...`);
       
-      promises.push(promise);
-      
-      // Small delay to avoid overwhelming the browser
-      if (i % 10 === 0) {
-        await new Promise(resolve => setTimeout(resolve, 10));
+      try {
+        const response = await fetch('/api/auth/login/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email: testEmail,
+            password: wrongPassword
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          failedAttempts++;
+          console.log(`❌ Failed attempt ${i}: ${data.email || data.non_field_errors || 'Login failed'}`);
+          
+          // Small delay between attempts to simulate real attack
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } else {
+          console.log(`⚠️ Unexpected success on attempt ${i}`);
+          break;
+        }
+      } catch (error) {
+        failedAttempts++;
+        console.log(`❌ Network error on attempt ${i}:`, error);
       }
     }
-
-    console.log('📡 Waiting for all requests to complete...');
-    const results = await Promise.all(promises);
     
-    // Check if any request triggered the rate limiting bug
-    const rateLimitBug = results.find(result => result.bug_found === 'RATE_LIMIT_BYPASS');
+    console.log(`📊 Total failed attempts: ${failedAttempts}`);
     
-    if (rateLimitBug) {
-      console.log('🎯 Rate limiting bypass detected!');
-      if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
-        (window as any).checkAndShowBugNotification(rateLimitBug);
-        console.log('✅ Rate limiting bug notification triggered');
+    // Check if we can record the rate limiting bug (10+ attempts)
+    if (failedAttempts >= 10) {
+      console.log('🎯 Recording rate limiting vulnerability...');
+      
+      const bugResponse = await fetch('/api/bugs/rate-limiting/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          attempt_count: failedAttempts,
+          email: testEmail
+        })
+      });
+      
+      if (bugResponse.ok) {
+        const bugData = await bugResponse.json();
+        
+        if (bugData.bug_found === 'NO_RATE_LIMITING') {
+          // Show bug notification
+          if (typeof showBugNotification === 'function') {
+            showBugNotification({
+              bug_found: bugData.bug_found,
+              message: bugData.message,
+              description: bugData.description,
+              points: bugData.points
+            });
+          }
+          
+          console.log('� SUCCESS! Login rate limiting vulnerability detected!');
+          console.log(`💥 Failed attempts: ${bugData.attempt_count}`);
+          console.log(`📝 Description: ${bugData.description}`);
+          console.log(`🏆 Points earned: ${bugData.points}`);
+          console.log('');
+          console.log('🔍 Vulnerability Details:');
+          console.log('• Login endpoint accepts unlimited password attempts');
+          console.log('• No rate limiting or account lockout mechanism');
+          console.log('• Allows brute force attacks on user accounts');
+          console.log('• No CAPTCHA or delay after failed attempts');
+          
+        } else {
+          console.log('❌ Rate limiting bug not detected:', bugData);
+        }
+      } else {
+        const errorData = await bugResponse.json();
+        console.log('❌ Failed to record rate limiting bug:', errorData);
       }
     } else {
-      console.log('ℹ️ Rate limiting appears to be working (this might be the expected behavior)');
+      console.log(`⚠️ Only ${failedAttempts} failed attempts. Need 10+ to detect rate limiting vulnerability.`);
     }
     
   } catch (error) {
-    console.error('❌ Rate limiting test failed:', error);
+    console.error('❌ Error testing login rate limiting:', error);
   }
 };
 
@@ -550,7 +714,7 @@ export const testSourceMapSecrets = async (): Promise<void> => {
       
       const bugData = {
         bug_found: 'SOURCE_MAP_SECRETS',
-        message: '🎉 Bug Found: Hidden API Token in Source Maps!',
+        message: 'Bug Found: Hidden API Token in Source Maps!',
         description: `Found ${foundSecrets.length} exposed secrets in source maps: ${foundSecrets.slice(0, 2).join(', ')}...`,
         points: 85
       };
@@ -572,28 +736,48 @@ export const testSourceMapSecrets = async (): Promise<void> => {
 export const testDebugCookie = (): void => {
   console.log('🍪 Testing Debug Cookie Detection...');
   
+  // Clear any previous detection to allow re-testing
+  sessionStorage.removeItem('debug_cookie_detected');
+  
   // Set debug cookie to simulate the vulnerability
   document.cookie = 'debug=true; path=/';
+  console.log('✅ Set debug cookie: debug=true');
   
-  // Check for debug cookie
-  const cookies = document.cookie.split(';');
-  const debugCookie = cookies.find(cookie => cookie.trim().startsWith('debug=true'));
-  
-  if (debugCookie) {
-    console.log('🎯 Debug cookie detected:', debugCookie);
+  // Trigger detection manually
+  setTimeout(() => {
+    const cookies = document.cookie.split(';');
+    const debugCookie = cookies.find(cookie => {
+      const trimmed = cookie.trim().toLowerCase();
+      return trimmed.includes('debug=true') || 
+             trimmed.includes('debug=1') ||
+             trimmed.includes('development=1') ||
+             trimmed.includes('verbose=true') ||
+             trimmed.includes('dev=true');
+    });
     
-    const bugData = {
-      bug_found: 'DEBUG_COOKIE',
-      message: '🎉 Bug Found: Debug Flag Cookie Detected!',
-      description: 'Debug mode enabled via cookie, potentially exposing sensitive information',
-      points: 70
-    };
+    if (debugCookie) {
+      console.log('🎯 Debug cookie detected:', debugCookie);
+      
+      const bugData = {
+        bug_found: 'DEBUG_COOKIE',
+        message: '🎉 Debug flag cookie detected!',
+        description: `Debug mode enabled via cookie: ${debugCookie.trim()}`,
+        points: 70,
+        vulnerability_type: 'Information Disclosure',
+        severity: 'Medium',
+        cookie_value: debugCookie.trim()
+      };
 
-    if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
-      (window as any).checkAndShowBugNotification(bugData);
-      console.log('✅ Debug cookie bug notification triggered');
+      // Show notification and record in leaderboard
+      showBugNotification(bugData);
+      notifyLeaderboard(bugData);
+      
+      sessionStorage.setItem('debug_cookie_detected', 'true');
+      console.log('✅ Debug cookie bug notification triggered!');
+    } else {
+      console.log('❌ Debug cookie not found');
     }
-  }
+  }, 100);
 };
 
 // 🚨 Bug 3: Wishlist Privacy Bypass Detection
@@ -609,7 +793,7 @@ export const testWishlistPrivacyBypass = (wishlistName: string): boolean => {
     
     const bugData = {
       bug_found: 'WISHLIST_PRIVACY_BYPASS',
-      message: '🎉 Bug Found: Wishlist Privacy Bypass Detected!',
+      message: 'Bug Found: Wishlist Privacy Bypass Detected!',
       description: 'Special string in wishlist name bypasses privacy settings',
       points: 75
     };
@@ -748,7 +932,141 @@ export const testSecondOrderSQLInjection = async (): Promise<void> => {
   }
 };
 
-// Make the new testing functions globally accessible
+// 🚨 Bug 6: IDOR Admin Panel Testing
+export const testIDORAdminPanel = async (): Promise<void> => {
+  console.log('🔐 Testing IDOR Admin Panel Access...');
+  
+  try {
+    // Test accessing admin panel without proper authorization
+    const response = await fetch('http://localhost:8000/api/products/admin/panel/');
+    const data = await response.json();
+    
+    console.log('Admin panel response:', data);
+    
+    if (data.bug_found === 'IDOR_ADMIN_PANEL') {
+      if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+        (window as any).checkAndShowBugNotification(data);
+        console.log('✅ IDOR Admin Panel bug notification triggered');
+      }
+    }
+    
+  } catch (error) {
+    console.error('❌ IDOR Admin Panel test failed:', error);
+  }
+};
+
+export const testIDORAdminUsers = async (): Promise<void> => {
+  console.log('👥 Testing IDOR Admin Users Access...');
+  
+  try {
+    // Test accessing admin users without proper authorization
+    const response = await fetch('http://localhost:8000/api/products/admin/users/');
+    const data = await response.json();
+    
+    console.log('Admin users response:', data);
+    
+    if (data.bug_found === 'IDOR_ADMIN_USERS') {
+      if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+        (window as any).checkAndShowBugNotification(data);
+        console.log('✅ IDOR Admin Users bug notification triggered');
+      }
+    }
+    
+  } catch (error) {
+    console.error('❌ IDOR Admin Users test failed:', error);
+  }
+};
+
+export const testIDORAdminSettings = async (): Promise<void> => {
+  console.log('⚙️ Testing IDOR Admin Settings Access...');
+  
+  try {
+    // Test accessing admin settings without proper authorization
+    const response = await fetch('http://localhost:8000/api/products/admin/settings/');
+    const data = await response.json();
+    
+    console.log('Admin settings response:', data);
+    
+    if (data.bug_found === 'IDOR_ADMIN_SETTINGS') {
+      if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+        (window as any).checkAndShowBugNotification(data);
+        console.log('✅ IDOR Admin Settings bug notification triggered');
+      }
+    }
+    
+  } catch (error) {
+    console.error('❌ IDOR Admin Settings test failed:', error);
+  }
+};
+
+// Convenience function to test all admin endpoints at once
+export const testAllIDORAdminEndpoints = async (): Promise<void> => {
+  console.log('🚨 Testing all IDOR Admin endpoints...');
+  await testIDORAdminPanel();
+  await new Promise(resolve => setTimeout(resolve, 500)); // Small delay between tests
+  await testIDORAdminUsers();
+  await new Promise(resolve => setTimeout(resolve, 500));
+  await testIDORAdminSettings();
+  console.log('✅ All IDOR Admin endpoint tests completed');
+};
+
+// 🚨 Bug 7: Open Redirect Testing
+export const testOpenRedirect = async (nextUrl: string = 'https://attacker.example/landing?bb_open_redirect=1'): Promise<void> => {
+  console.log('🔗 Testing Open Redirect...');
+  
+  try {
+    const token = localStorage.getItem('access_token');
+    
+    if (token) {
+      // Test with authenticated user via POST
+      console.log('Testing authenticated user redirect via login API...');
+      const response = await fetch('http://localhost:8000/api/auth/login/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          next: nextUrl
+        })
+      });
+      
+      const data = await response.json();
+      console.log('Login redirect response:', data);
+      
+      if (data.bug_found === 'OPEN_REDIRECT') {
+        if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+          (window as any).checkAndShowBugNotification(data);
+          console.log('✅ Open redirect bug notification triggered');
+        }
+        
+        // Simulate the redirect
+        if (data.redirect_to) {
+          console.log(`🔄 Would redirect to: ${data.redirect_to}`);
+          console.log('⚠️ This demonstrates the open redirect vulnerability!');
+        }
+      }
+    } else {
+      console.log('⚠️ Please log in first to test authenticated open redirect');
+    }
+    
+    // Also test the dedicated redirect endpoint
+    console.log('Testing dedicated redirect endpoint...');
+    const redirectResponse = await fetch(`http://localhost:8000/api/auth/login-redirect/?next=${encodeURIComponent(nextUrl)}`);
+    const redirectData = await redirectResponse.json();
+    console.log('Redirect endpoint response:', redirectData);
+    
+  } catch (error) {
+    console.error('❌ Open redirect test failed:', error);
+  }
+};
+
+// Convenience function to test with default malicious URL
+export const testOpenRedirectDefault = (): Promise<void> => {
+  return testOpenRedirect('https://attacker.example/landing?bb_open_redirect=1');
+};
+
+// Make the testing functions globally accessible
 if (typeof window !== 'undefined') {
   (window as any).testIntegerOverflow = testIntegerOverflow;
   (window as any).testRateLimiting = testRateLimiting;
@@ -759,6 +1077,12 @@ if (typeof window !== 'undefined') {
   (window as any).testIDORReviewDeletion = testIDORReviewDeletion;
   (window as any).testXXEInjection = testXXEInjection;
   (window as any).testSecondOrderSQLInjection = testSecondOrderSQLInjection;
+  (window as any).testIDORAdminPanel = testIDORAdminPanel;
+  (window as any).testIDORAdminUsers = testIDORAdminUsers;
+  (window as any).testIDORAdminSettings = testIDORAdminSettings;
+  (window as any).testAllIDORAdminEndpoints = testAllIDORAdminEndpoints;
+  (window as any).testOpenRedirect = testOpenRedirect;
+  (window as any).testOpenRedirectDefault = testOpenRedirectDefault;
 }
 
 // Replace the existing initializeDebugCookieDetection function with this:
@@ -767,58 +1091,53 @@ const initializeDebugCookieDetection = (): void => {
   const checkDebugCookie = () => {
     // Get all cookies and check for debug variations
     const cookies = document.cookie.split(';');
-    console.log('🔍 All cookies:', cookies);
+    console.log('🔍 Checking cookies for debug flags...');
     
+    // Check for various debug cookie patterns
     const debugCookie = cookies.find(cookie => {
       const trimmed = cookie.trim().toLowerCase();
-      return trimmed.startsWith('debug=true') || 
-             trimmed.startsWith('debug=1') ||
-             trimmed === 'debug=true' ||
-             trimmed === 'debug=1';
+      return trimmed.includes('debug=true') || 
+             trimmed.includes('debug=1') ||
+             trimmed.includes('development=1') ||
+             trimmed.includes('verbose=true') ||
+             trimmed.includes('dev=true');
     });
     
-    console.log('🍪 Debug cookie found:', debugCookie);
-    
-    if (debugCookie && !sessionStorage.getItem('debug_cookie_detected')) {
-      console.log('🎯 Debug cookie detected automatically:', debugCookie);
+    if (debugCookie) {
+      console.log('🍪 Debug cookie found:', debugCookie);
       
-      const bugData = {
-        bug_found: 'DEBUG_COOKIE',
-        message: '🎉 Bug Found: Debug Flag Cookie Detected!',
-        description: 'Debug mode enabled via cookie, potentially exposing sensitive information',
-        points: 70
-      };
+      // Check if we already detected this to prevent duplicates
+      if (!sessionStorage.getItem('debug_cookie_detected')) {
+        console.log('🎯 Debug cookie vulnerability detected!');
+        
+        const bugData = {
+          bug_found: 'DEBUG_COOKIE',
+          message: '🎉 Debug flag cookie detected!',
+          description: `Debug mode enabled via cookie: ${debugCookie.trim()}`,
+          points: 70,
+          vulnerability_type: 'Information Disclosure',
+          severity: 'Medium',
+          cookie_value: debugCookie.trim()
+        };
 
-      // Force the notification to show
-      if (typeof window !== 'undefined') {
-        if ((window as any).checkAndShowBugNotification) {
-          (window as any).checkAndShowBugNotification(bugData);
-        } else {
-          // Fallback: call showBugNotification directly
-          showBugNotification(bugData);
-        }
+        // Show notification and record in leaderboard
+        showBugNotification(bugData);
+        notifyLeaderboard(bugData);
+        
+        // Mark as detected to prevent duplicates
         sessionStorage.setItem('debug_cookie_detected', 'true');
-        console.log('✅ Debug cookie notification triggered!');
+        console.log('✅ Debug cookie bug notification triggered!');
       }
     }
   };
 
-  // Check immediately
+  // Check immediately on initialization
   console.log('🚀 Initializing debug cookie detection...');
-  setTimeout(checkDebugCookie, 500); // Small delay to ensure page is loaded
+  setTimeout(checkDebugCookie, 500);
   
-  // Also monitor for cookie changes
-  let lastCookies = document.cookie;
-  setInterval(() => {
-    if (document.cookie !== lastCookies) {
-      lastCookies = document.cookie;
-      console.log('🔄 Cookies changed, rechecking...');
-      setTimeout(checkDebugCookie, 100);
-    }
-  }, 1000);
+  // Monitor for cookie changes every 2 seconds
+  setInterval(checkDebugCookie, 2000);
 };
-
-// ...existing code...
 
 // SQL Injection detection for form inputs
 const initializeSQLInjectionDetection = (): void => {
@@ -841,7 +1160,7 @@ const initializeSQLInjectionDetection = (): void => {
       
       const bugData = {
         bug_found: 'SECOND_ORDER_SQL_INJECTION',
-        message: '🎉 Bug Found: Second-Order SQL Injection Detected!',
+        message: 'Bug Found: Second-Order SQL Injection Detected!',
         description: `Malicious SQL payload detected in ${context}: ${input.substring(0, 50)}...`,
         points: 100
       };
@@ -951,10 +1270,348 @@ const initializeAllBugDetection = (): void => {
   
   // Initialize all detection systems
   initializeDebugCookieDetection();
- 
+  initializeLocalStorageMonitoring();
   initializeSQLInjectionDetection();
   
   console.log('✅ All bug detection systems initialized');
+};
+
+// Test clickjacking vulnerability
+export const testClickjacking = async () => {
+  console.log('🎯 Testing Clickjacking vulnerability...');
+  
+  try {
+    // Check if page is in iframe (for manual testing)
+    if (window.top !== window.self) {
+      console.log('🎯 Page is in iframe - triggering clickjacking detection...');
+      
+      const response = await fetch('/api/bugs/record/?bug=clickjack&mark=1', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bug: 'clickjack',
+          mark: '1'
+        })
+      });
+      
+      const data = await response.json();
+      console.log('📡 Clickjacking test response:', data);
+      
+      if (data.bug_found === 'CLICKJACKING') {
+        showBugNotification(data);
+        console.log('🎉 Clickjacking vulnerability detected and notification shown!');
+        return true;
+      }
+    } else {
+      console.log('⚠️ Page is not in iframe. To test clickjacking:');
+      console.log('1. Open http://localhost:8082/frame-test.html');
+      console.log('2. Or visit http://localhost:5173/account/profile?bb_iframe=1 in an iframe');
+      
+      // For testing outside iframe, make a direct API call
+      const response = await fetch('/api/bugs/record/?bug=clickjack&mark=1', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bug: 'clickjack',
+          mark: '1'
+        })
+      });
+      
+      const data = await response.json();
+      console.log('📡 Clickjacking API test response:', data);
+      
+      if (data.bug_found === 'CLICKJACKING') {
+        showBugNotification(data);
+        console.log('🎉 Clickjacking API endpoint working!');
+        return true;
+      }
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('❌ Error testing clickjacking:', error);
+    return false;
+  }
+};
+
+// Test privilege escalation vulnerability
+export const testPrivilegeEscalation = async () => {
+  console.log('🎯 Testing Privilege Escalation vulnerability...');
+  
+  try {
+    // Check if user is authenticated
+    const accessToken = localStorage.getItem('access_token');
+    if (!accessToken) {
+      console.log('❌ Not authenticated. Please log in first.');
+      return false;
+    }
+    
+    // Get current user info
+    console.log('🔍 Checking current user role...');
+    const userResponse = await fetch('/api/accounts/auth/profile/', {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!userResponse.ok) {
+      console.log('❌ Failed to get user info');
+      return false;
+    }
+    
+    const currentUser = await userResponse.json();
+    console.log('👤 Current user info:', currentUser);
+    console.log(`📋 Current role: ${currentUser.role}`);
+    console.log(`🛡️ Is staff: ${currentUser.is_staff}`);
+    console.log(`👑 Is superuser: ${currentUser.is_superuser}`);
+    
+    // Attempt privilege escalation
+    console.log('🚀 Attempting privilege escalation to admin...');
+    
+    const response = await fetch('/api/accounts/users/set_role/', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        role: 'admin'
+      })
+    });
+    
+    const data = await response.json();
+    console.log('📡 Privilege escalation response:', data);
+    
+    if (data.bug_found === 'PRIVILEGE_ESCALATION') {
+      // Show bug notification
+      showBugNotification({
+        bug_found: data.bug_found,
+        message: data.message,
+        description: data.description,
+        points: data.points
+      });
+      
+      console.log('🎉 SUCCESS! Privilege escalation vulnerability detected!');
+      console.log(`👑 New role: ${data.user_role}`);
+      console.log(`🛡️ Is staff: ${data.is_staff}`);
+      console.log(`👑 Is superuser: ${data.is_superuser}`);
+      console.log(`🏆 Points earned: ${data.points}`);
+      
+      // Verify escalation by checking profile again
+      const verifyResponse = await fetch('/api/accounts/auth/profile/', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (verifyResponse.ok) {
+        const updatedUser = await verifyResponse.json();
+        console.log('✅ Privilege escalation verified!');
+        console.log(`📋 Verified role: ${updatedUser.role}`);
+        console.log(`🛡️ Verified is_staff: ${updatedUser.is_staff}`);
+        console.log(`👑 Verified is_superuser: ${updatedUser.is_superuser}`);
+      }
+      
+      return true;
+    } else {
+      console.log('❌ Privilege escalation failed:', data);
+      return false;
+    }
+    
+  } catch (error) {
+    console.error('❌ Error testing privilege escalation:', error);
+    return false;
+  }
+};
+
+// 🚨 TEST FUNCTION: Business Logic Bypass - Negative Quantity
+export const testNegativeQuantity = async (): Promise<void> => {
+  console.log('🔄 Testing business logic bypass - negative quantity...');
+  
+  // Check if user is logged in
+  const accessToken = localStorage.getItem('access_token');
+  if (!accessToken) {
+    console.log('❌ User not logged in! Please log in first to test this vulnerability.');
+    console.log('💡 Go to /login and log in with any account, then come back to a product page and run this test.');
+    console.log('📝 Steps:');
+    console.log('1. Navigate to /login');
+    console.log('2. Log in with any existing account (e.g., admin@example.com / admin123)');
+    console.log('3. Navigate back to any product page');
+    console.log('4. Run testNegativeQuantity() again');
+    return;
+  }
+  
+  console.log('✅ User is authenticated. Checking for product page...');
+  
+  // Check if we're on a product page
+  const quantityInput = document.querySelector('input[name="quantity"]') as HTMLInputElement;
+  if (!quantityInput) {
+    console.log('⚠️ Not on a product page. Navigate to any product page first.');
+    console.log('📝 Instructions:');
+    console.log('1. Go to any product page (e.g., click on a product)');
+    console.log('2. Run this test again');
+    return;
+  }
+  
+  console.log('✅ Product page detected. Testing negative quantity...');
+  
+  try {
+    // Modify the quantity input to accept negative values
+    quantityInput.setAttribute('min', '-999');
+    quantityInput.value = '-5';
+    
+    // Trigger change event to update React state
+    const event = new Event('change', { bubbles: true });
+    quantityInput.dispatchEvent(event);
+    
+    console.log('🎯 Modified quantity input to -5');
+    console.log('📝 Now clicking "Add to Cart" button to trigger the vulnerability...');
+    
+    // Try to find and click the add to cart button automatically
+    const addToCartButton = document.querySelector('[data-testid="add-to-cart"]') as HTMLButtonElement;
+    if (addToCartButton) {
+      console.log('🔄 Automatically clicking "Add to Cart" button...');
+      addToCartButton.click();
+      
+      // Wait a moment for the response
+      setTimeout(() => {
+        console.log('✅ If vulnerability exists, you should see a bug notification above!');
+      }, 1000);
+    } else {
+      console.log('⚠️ Could not find "Add to Cart" button. Please click it manually.');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error testing negative quantity:', error);
+  }
+};
+
+// 🚨 MANUAL TEST HELPER: Business Logic Bypass
+export const setupNegativeQuantityTest = (): void => {
+  console.log('🔧 Setting up negative quantity test...');
+  
+  // Check if we're on a product page
+  const quantityInput = document.querySelector('input[name="quantity"]') as HTMLInputElement;
+  if (!quantityInput) {
+    console.log('⚠️ Not on a product page. Navigate to any product page first.');
+    return;
+  }
+  
+  console.log('✅ Found quantity input. Modifying for negative values...');
+  
+  // Modify the quantity input to accept negative values
+  quantityInput.setAttribute('min', '-999');
+  quantityInput.style.position = 'relative';
+  quantityInput.style.left = '0';
+  quantityInput.style.opacity = '1';
+  quantityInput.style.visibility = 'visible';
+  quantityInput.style.display = 'block';
+  
+  console.log('✅ Quantity input is now visible and accepts negative values');
+  console.log('📝 You can now:');
+  console.log('1. Set quantity to a negative value (e.g., -5)');
+  console.log('2. Click "Add to Cart"');
+  console.log('3. Watch for the business logic bypass notification!');
+};
+
+// 🚨 TEST FUNCTION: Session Fixation Attack
+export const testSessionFixation = async (): Promise<void> => {
+  console.log('🔄 Testing session fixation vulnerability...');
+  
+  try {
+    // Set a fixed session ID that contains suspicious keywords
+    const attackerSessionId = 'attacker_controlled_session_123';
+    document.cookie = `sessionid=${attackerSessionId}; path=/`;
+    
+    console.log('✅ Set attacker-controlled session ID:', attackerSessionId);
+    
+    // Verify the cookie was set
+    const currentCookies = document.cookie;
+    console.log('🍪 Current cookies:', currentCookies);
+    
+    if (!currentCookies.includes(attackerSessionId)) {
+      console.log('❌ Cookie was not set properly. Trying alternative method...');
+      // Try setting with domain
+      document.cookie = `sessionid=${attackerSessionId}; path=/; domain=localhost`;
+    }
+    
+    console.log('📝 Now attempting login to trigger session fixation detection...');
+    
+    // Try to login with any credentials to trigger the vulnerability
+    // Use fetch with credentials to ensure cookies are sent
+    const loginResponse = await fetch('http://localhost:8000/api/auth/login/', {
+      method: 'POST',
+      credentials: 'include', // Ensure cookies are sent
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: 'test@example.com',
+        password: 'anypassword'  // Can be wrong password
+      })
+    });
+    
+    const data = await loginResponse.json();
+    
+    console.log('🔍 Login response status:', loginResponse.status);
+    console.log('🔍 Login response:', data);
+    
+    // Check if session fixation was detected
+    if (data.bug_found === 'SESSION_FIXATION') {
+      console.log('🎉 Session fixation vulnerability detected!');
+      
+      // Show bug notification
+      if (typeof window !== 'undefined' && (window as any).checkAndShowBugNotification) {
+        (window as any).checkAndShowBugNotification(data);
+      }
+      
+      // Show toast notification if available
+      if (typeof window !== 'undefined' && (window as any).toast) {
+        (window as any).toast({
+          title: "Session Fixation Detected!",
+          description: data.message,
+          variant: "destructive"
+        });
+      }
+      
+      return;
+    }
+    
+    console.log('⚠️ Session fixation not detected.');
+    console.log('🔧 Debugging info:');
+    console.log('- Cookie sent:', currentCookies.includes(attackerSessionId));
+    console.log('- Response status:', loginResponse.status);
+    console.log('- Response contains bug_found:', 'bug_found' in data);
+    
+  } catch (error) {
+    console.error('❌ Error testing session fixation:', error);
+  }
+};
+
+// 🚨 MANUAL SETUP: Session Fixation Attack
+export const setupSessionFixationTest = (): void => {
+  console.log('🔧 Setting up session fixation test...');
+  
+  // Set the attacker-controlled session ID
+  const attackerSessionId = 'attacker_controlled_session_123';
+  document.cookie = `sessionid=${attackerSessionId}; path=/`;
+  
+  console.log('✅ Set session ID:', attackerSessionId);
+  console.log('📝 Instructions:');
+  console.log('1. Go to the login page (/login)');
+  console.log('2. Enter any email and password');
+  console.log('3. Click "Sign in"');
+  console.log('4. Watch for session fixation bug notification!');
+  console.log('');
+  console.log('💡 Alternative: Run testSessionFixation() to test automatically');
 };
 
 // Auto-initialize when the script loads
@@ -964,4 +1621,14 @@ if (typeof window !== 'undefined') {
   } else {
     initializeAllBugDetection();
   }
+  
+  // Make test functions globally accessible
+  (window as any).testClickjacking = testClickjacking;
+  (window as any).testPrivilegeEscalation = testPrivilegeEscalation;
+  (window as any).testNegativeQuantity = testNegativeQuantity;
+  (window as any).setupNegativeQuantityTest = setupNegativeQuantityTest;
+  (window as any).testSessionFixation = testSessionFixation;
+  (window as any).setupSessionFixationTest = setupSessionFixationTest;
+  (window as any).testLocalStorageManipulation = testLocalStorageManipulation;
+  (window as any).testDebugCookie = testDebugCookie;
 }

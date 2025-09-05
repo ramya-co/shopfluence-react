@@ -10,8 +10,12 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('accounts.urls')),
     path('api/', include('products.urls')),
+    # Make sure this line exists:
+    path('api/auth/', include('accounts.urls')),
     path('api/', include('orders.urls')),
     path('api/', include('wishlist.urls')),
+     path('api/products/', include('products.urls')),  # This should exist
+    
 ]
 
 # Serve media files in development

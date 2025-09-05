@@ -53,15 +53,25 @@ class UserLoginSerializer(serializers.Serializer):
 class UserProfileSerializer(serializers.ModelSerializer):
     """Serializer for user profile"""
     full_name = serializers.SerializerMethodField()
+    role = serializers.SerializerMethodField()
     
     class Meta:
         model = User
         fields = ['id', 'email', 'username', 'first_name', 'last_name', 'full_name', 
-                 'avatar', 'phone_number', 'date_of_birth', 'is_verified', 'created_at']
-        read_only_fields = ['id', 'email', 'created_at']
+                 'avatar', 'phone_number', 'date_of_birth', 'is_verified', 'created_at',
+                 'is_staff', 'is_superuser', 'role']
+        read_only_fields = ['id', 'email', 'created_at', 'is_staff', 'is_superuser']
 
     def get_full_name(self, obj):
         return obj.get_full_name()
+        
+    def get_role(self, obj):
+        if obj.is_superuser:
+            return 'admin'
+        elif obj.is_staff:
+            return 'staff'
+        else:
+            return 'user'
 
 
 class AddressSerializer(serializers.ModelSerializer):

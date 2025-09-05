@@ -287,7 +287,7 @@ def search_products_xss(request):
     if '<script>' in query.lower() or 'javascript:' in query.lower() or 'alert(' in query.lower():
         return Response({
             'bug_found': 'XSS_SEARCH',
-            'message': '🎉 Bug Found: Cross-Site Scripting (XSS)!',
+            'message': 'Bug Found: Cross-Site Scripting (XSS)!',
             'description': 'XSS payload detected in search query',
             'points': 85,
             'payload': query
@@ -310,7 +310,7 @@ def download_file(request):
     if '../' in file_path or file_path.startswith('/') or 'etc/passwd' in file_path:
         return Response({
             'bug_found': 'PATH_TRAVERSAL',
-            'message': '🎉 Bug Found: Path Traversal!',
+            'message': 'Bug Found: Path Traversal!',
             'description': 'Directory traversal vulnerability detected',
             'points': 90,
             'attempted_path': file_path
@@ -344,7 +344,7 @@ def rate_limit_test(request):
     if request_counts[client_ip]['count'] > 100:
         return Response({
             'bug_found': 'RATE_LIMIT_BYPASS',
-            'message': '🎉 Bug Found: Rate Limiting Bypass!',
+            'message': 'Bug Found: Rate Limiting Bypass!',
             'description': 'No rate limiting implemented',
             'points': 70,
             'requests_count': request_counts[client_ip]['count']
@@ -374,7 +374,7 @@ def delete_review_vulnerable(request, review_id):
         if review_owner != current_user:
             return Response({
                 'bug_found': 'IDOR_REVIEW_DELETE',
-                'message': '🎉 Bug Found: Unauthorized Review Deletion Detected!',
+                'message': 'Bug Found: Unauthorized Review Deletion Detected!',
                 'description': f'User {current_user} deleted review by {review_owner}',
                 'points': 90,
                 'deleted_review_id': review_id,
@@ -427,7 +427,7 @@ def import_products_xml(request):
         if detected_patterns:
             return Response({
                 'bug_found': 'XXE_INJECTION',
-                'message': '🎉 Bug Found: XXE Vulnerability in Product Import!',
+                'message': 'Bug Found: XXE Vulnerability in Product Import!',
                 'description': f'XML External Entity injection detected: {", ".join(detected_patterns)}',
                 'points': 95,
                 'detected_patterns': detected_patterns,
@@ -502,7 +502,7 @@ def get_popular_searches(request):
         if detected_injections:
             return Response({
                 'bug_found': 'SECOND_ORDER_SQL_INJECTION',
-                'message': '🎉 Bug Found: Second-Order SQL Injection Detected!',
+                'message': 'Bug Found: Second-Order SQL Injection Detected!',
                 'description': f'Malicious SQL payload stored and executed: {detected_injections[0]["pattern"]}',
                 'points': 100,
                 'detected_injections': detected_injections[:3],  # Limit to first 3
@@ -525,3 +525,130 @@ def get_popular_searches(request):
             'error': 'Failed to retrieve popular searches',
             'detail': str(e)
         }, status=500)
+
+# ============ IDOR Admin Panel Vulnerability ============
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def admin_panel(request):
+    """
+    Vulnerable admin panel endpoint - returns sensitive admin data without proper authorization
+    This demonstrates IDOR (Insecure Direct Object Reference) vulnerability
+    """
+    # No authentication or authorization check!
+    admin_data = {
+        'bug_found': 'IDOR_ADMIN_PANEL',
+        'message': 'Bug Found: IDOR Admin Panel Access!',
+        'description': 'Unauthorized access to admin panel - sensitive data exposed without proper authentication',
+        'points': 120,
+        'admin_panel': {
+            'system_info': {
+                'server_version': 'Django 4.2.7',
+                'database': 'shopfluence_prod',
+                'secret_key': 'django-insecure-admin-key-123456',
+                'debug_mode': False,
+                'admin_users_count': 3
+            },
+            'recent_admin_actions': [
+                {'action': 'User password reset', 'admin': 'admin@shopfluence.com', 'timestamp': '2024-01-15 14:30:22'},
+                {'action': 'Product deletion', 'admin': 'superuser@shopfluence.com', 'timestamp': '2024-01-15 13:45:10'},
+                {'action': 'Database backup', 'admin': 'admin@shopfluence.com', 'timestamp': '2024-01-15 12:15:33'}
+            ],
+            'security_settings': {
+                'two_factor_enabled': False,
+                'session_timeout': 3600,
+                'password_policy': 'weak',
+                'login_attempts_limit': None
+            }
+        }
+    }
+    
+    return Response(admin_data)
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def admin_users(request):
+    """
+    Vulnerable admin users endpoint - exposes user management data
+    """
+    # No authentication or authorization check!
+    users_data = {
+        'bug_found': 'IDOR_ADMIN_USERS',
+        'message': 'Bug Found: IDOR Admin Users Access!',
+        'description': 'Unauthorized access to user management data - sensitive user information exposed',
+        'points': 110,
+        'admin_users': {
+            'total_users': 1247,
+            'admin_users': [
+                {
+                    'id': 1,
+                    'username': 'admin',
+                    'email': 'admin@shopfluence.com',
+                    'password_hash': '$2b$12$rQjHVx.../dummy_hash_123',
+                    'last_login': '2024-01-15 15:22:11',
+                    'is_superuser': True,
+                    'permissions': ['all_access']
+                },
+                {
+                    'id': 2,
+                    'username': 'superuser',
+                    'email': 'superuser@shopfluence.com',
+                    'password_hash': '$2b$12$aB3Dx.../dummy_hash_456',
+                    'last_login': '2024-01-15 14:55:33',
+                    'is_superuser': True,
+                    'permissions': ['user_management', 'product_management']
+                }
+            ],
+            'recent_user_activities': [
+                {'user_id': 123, 'action': 'purchase', 'amount': '$299.99', 'timestamp': '2024-01-15 15:20:44'},
+                {'user_id': 456, 'action': 'profile_update', 'sensitive_data': 'Credit card ending 4567', 'timestamp': '2024-01-15 15:18:22'},
+                {'user_id': 789, 'action': 'password_change', 'ip_address': '192.168.1.100', 'timestamp': '2024-01-15 15:15:10'}
+            ]
+        }
+    }
+    
+    return Response(users_data)
+
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def admin_settings(request):
+    """
+    Vulnerable admin settings endpoint - exposes system configuration
+    """
+    # No authentication or authorization check!
+    settings_data = {
+        'bug_found': 'IDOR_ADMIN_SETTINGS',
+        'message': 'Bug Found: IDOR Admin Settings Access!',
+        'description': 'Unauthorized access to system settings - critical configuration data exposed',
+        'points': 130,
+        'admin_settings': {
+            'database_config': {
+                'host': 'prod-db.shopfluence.com',
+                'port': 5432,
+                'username': 'admin_user',
+                'password': 'prod_db_password_123',
+                'database_name': 'shopfluence_production'
+            },
+            'api_keys': {
+                'stripe_secret': 'sk_live_51234567890abcdef',
+                'aws_access_key': 'AKIA1234567890ABCDEF',
+                'aws_secret_key': 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYzEXAMPLEKEY',
+                'email_service_key': 'SG.1234567890abcdef.ghijklmnop'
+            },
+            'security_config': {
+                'csrf_protection': False,
+                'ssl_required': False,
+                'rate_limiting': False,
+                'audit_logging': False,
+                'encryption_key': 'unsafe_encryption_key_12345'
+            },
+            'business_metrics': {
+                'daily_revenue': '$45,678.90',
+                'total_customers': 12470,
+                'conversion_rate': '3.2%',
+                'top_selling_products': ['iPhone 15', 'MacBook Pro', 'AirPods Pro']
+            }
+        }
+    }
+    
+    return Response(settings_data)

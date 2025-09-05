@@ -32,7 +32,7 @@ interface AuthState {
 
 interface AuthContextType {
   state: AuthState;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string, nextUrl?: string) => Promise<boolean>;
   register: (email: string, username: string, password: string, passwordConfirm: string, firstName: string, lastName: string) => Promise<boolean>;
   logout: () => void;
   clearError: () => void;
@@ -66,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTimeout(() => {
           const bugData = {
             bug_found: 'JWT_SECRET_LOCALSTORAGE',
-            message: '🎉 Bug Found: JWT Secret in LocalStorage!',
+            message: 'Bug Found: JWT Secret in LocalStorage!',
             description: `Sensitive JWT secret "${key}" exposed in browser storage`,
             points: 85
           };
@@ -127,7 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Token manipulation detected - use proper notification system
         const bugData = {
           bug_found: 'LOCALSTORAGE_MANIPULATION',
-          message: '🎉 Bug Found: Local Storage Manipulation!',
+          message: 'Bug Found: Local Storage Manipulation!',
           description: 'Local storage token manipulation detected!',
           points: 70
         };
@@ -206,15 +206,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string, nextUrl?: string): Promise<boolean> => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
-      const response = await api.auth.login({ email, password });
+      const loginData: any = { email, password };
+      if (nextUrl) {
+        loginData.next = nextUrl;
+      }
+      
+      const response = await api.auth.login(loginData);
       const data = await response.json();
 
       // 🚨 Check for bug detection in response
       if (checkAndShowBugNotification(data)) {
+        // If there's a redirect_to in the response, handle the redirect
+        if (data.redirect_to) {
+          // Store tokens first if provided
+          const accessToken = data.access || data.tokens?.access || data.token;
+          const refreshToken = data.refresh || data.tokens?.refresh;
+          
+          if (accessToken) {
+            localStorage.setItem('access_token', accessToken);
+            if (refreshToken) {
+              localStorage.setItem('refresh_token', refreshToken);
+            }
+            
+            // Update state with user info
+            setState({
+              user: data.user,
+              isLoading: false,
+              isAuthenticated: true,
+              error: null,
+            });
+            
+            // Store user data for leaderboard access
+            if (data.user) {
+              sessionStorage.setItem('current_user_data', JSON.stringify(data.user));
+            }
+            
+            // Perform the redirect after a short delay to ensure notification is shown
+            setTimeout(() => {
+              window.location.href = data.redirect_to;
+            }, 1500);
+          }
+        }
         setState(prev => ({ ...prev, isLoading: false }));
         return false;
       }

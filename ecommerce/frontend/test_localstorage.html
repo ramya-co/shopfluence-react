@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LocalStorage Test</title>
+</head>
+<body>
+    <h1>LocalStorage Manipulation Test</h1>
+    <p>Open DevTools Console to see results</p>
+    
+    <script>
+        // Set a valid JWT token first
+        const validToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU3MDYwODgzLCJpYXQiOjE3NTY5NzQ0ODMsImp0aSI6IjlmNDg1MDAxMzM0MzQyZWI4Y2U2YzY5MDBlNGRjZWRjIiwidXNlcl9pZCI6IjEifQ.test123';
+        localStorage.setItem('access_token', validToken);
+        console.log('✅ Set valid token:', validToken.substring(0, 50) + '...');
+        
+        // Test manipulation after 3 seconds
+        setTimeout(() => {
+            console.log('🔄 Manipulating token...');
+            localStorage.setItem('access_token', 'fake_manipulated_token');
+            console.log('✅ Token manipulated - detection should trigger in ~2 seconds');
+        }, 3000);
+    </script>
+</body>
+</html>
